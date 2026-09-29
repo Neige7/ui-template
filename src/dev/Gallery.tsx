@@ -26,6 +26,8 @@ import { MountScreen } from '../screens/mount/MountScreen';
 import { PetScreen } from '../screens/pet/PetScreen';
 import { QuestScreen } from '../screens/quest/QuestScreen';
 import { WarehouseScreen } from '../screens/warehouse/WarehouseScreen';
+import { ChestShopBuyScreen } from '../screens/chest_shop_buy/ChestShopBuyScreen';
+import { ChestShopEditScreen } from '../screens/chest_shop_edit/ChestShopEditScreen';
 import { ActionLogEntry, GuiAction, ScreenId, ServerState } from '../types';
 import { DebugOverlayBanner } from './DebugOverlay';
 import { runCoreUnitTests, TestRunnerModal } from './TestRunnerModal';
@@ -49,6 +51,8 @@ const SCREEN_NAV_ITEMS: {
   { id: 'mount', label: '6.4 坐骑界面', sub: 'Mount (复用模板)', icon: 'mount_griffin' },
   { id: 'mail', label: '6.6 邮箱界面', sub: 'Mail & CDK', icon: 'mail_unread' },
   { id: 'guild', label: '6.5 公会界面', sub: 'Guild & 权限矩阵', icon: 'banner_guild' },
+  { id: 'shop_edit', label: '6.8 箱子商店管理', sub: 'Chest Shop · Edit', icon: 'chest_shop' },
+  { id: 'shop_buy', label: '6.9 箱子商店购买', sub: 'Chest Shop · Buy', icon: 'cart_buy' },
 ];
 
 export const Gallery: React.FC = () => {
@@ -153,7 +157,7 @@ export const Gallery: React.FC = () => {
       }}
     >
       <div className="app-workbench">
-        {/* ==================== 左侧：7 大界面导航与场景/缩放控制器 ==================== */}
+        {/* ==================== 左侧：9 大界面导航与场景/缩放控制器 ==================== */}
         <aside className="workbench-sidebar">
           <div className="brand-box">
             <h1 className="brand-title">⚔ MC-RPG GUI 原型组件库</h1>
@@ -162,7 +166,7 @@ export const Gallery: React.FC = () => {
             </p>
           </div>
 
-          {/* 7 个界面切换器 */}
+          {/* 9 个界面切换器 */}
           <div>
             <div
               style={{
@@ -174,7 +178,7 @@ export const Gallery: React.FC = () => {
                 justifyContent: 'space-between',
               }}
             >
-              <span>7 大服务器 GUI 界面</span>
+              <span>9 大服务器 GUI 界面</span>
               <span>点击切换</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -437,6 +441,8 @@ export const Gallery: React.FC = () => {
           {activeScreen === 'mount' && <MountScreen />}
           {activeScreen === 'mail' && <MailScreen />}
           {activeScreen === 'guild' && <GuildScreen />}
+          {activeScreen === 'shop_edit' && <ChestShopEditScreen />}
+          {activeScreen === 'shop_buy' && <ChestShopBuyScreen />}
         </main>
 
         {/* ==================== 右侧：每界面三件套交付检查器 (README + layout.json + GuiAction 流) ==================== */}

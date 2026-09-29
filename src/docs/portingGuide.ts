@@ -5,6 +5,8 @@ import mountLayout from '../screens/mount/layout.json';
 import petLayout from '../screens/pet/layout.json';
 import questLayout from '../screens/quest/layout.json';
 import warehouseLayout from '../screens/warehouse/layout.json';
+import shopEditLayout from '../screens/chest_shop_edit/layout.json';
+import shopBuyLayout from '../screens/chest_shop_buy/layout.json';
 import { ScreenId } from '../types';
 
 export const SCREEN_LAYOUTS: Record<ScreenId, unknown> = {
@@ -15,9 +17,38 @@ export const SCREEN_LAYOUTS: Record<ScreenId, unknown> = {
   mount: mountLayout,
   mail: mailLayout,
   guild: guildLayout,
+  shop_edit: shopEditLayout,
+  shop_buy: shopBuyLayout,
 };
 
 export const SCREEN_READMES: Record<ScreenId, { title: string; bullets: string[]; mcPortingNotes: string[] }> = {
+  shop_edit: {
+    title: '箱子商店 · 商品管理与配置 (Chest Shop Edit) · 6×9 容器 + 36 格背包',
+    bullets: [
+      '单品上架原则：商店内只能上架一个物品；初始状态槽位 13 为空显示待上架。',
+      '背包联动上架：点击下方玩家背包 (P0~P35) 内任意物品即刻完成上架，并将该组物品充入初始库存。',
+      '超大库存管理：摆脱原版 64 堆叠上限，支持按最大容量（如 5000 件）存储 300 件或更多商品。',
+      '结算货币自由切换：支持金币 (Vault)、点券 (PlayerPoints)、绿宝石三种结算经济体系。',
+      '单价直接输入与微调：支持 +-1、+-10、+-100 增减，以及铁砧直接自定义键盘输入单价值。',
+    ],
+    mcPortingNotes: [
+      'Bukkit/Paper 映射：rawSlot 13 映射为 Shop Item 模板，rawSlot 54..89 捕获背包点击执行首次上架或同类补货。',
+      '超大库存存储采用数据库或 NBT 存储总整型数值，客户端使用 custom Lore 与物品数量覆盖渲染。',
+    ],
+  },
+  shop_buy: {
+    title: '箱子商店 · 玩家购买选购 (Chest Shop Buy) · 6×9 容器 + 36 格背包',
+    bullets: [
+      '展示透明：居中槽位 13 直观展示商品属性、货币类型、单件售价、当前剩余库存与买家背包可用容量。',
+      '数量调节与背包强约束：可用 +- 增减数量或铁砧直接编辑，但购买数量绝对禁止超过背包内物品上限！',
+      'MAX 智能拉满：一键计算 min(商店库存, 背包剩余上限, 余额可购数)，一键装载最大合理数量。',
+      '实时背包联动：下方 36 格背包直观渲染，购买扣费成功后商品按照原版 64 堆叠规则整齐划一落入背包。',
+    ],
+    mcPortingNotes: [
+      '服务端购买校验：必须串行校验 buyQty <= stock && buyQty <= calculateMaxInventoryCapacity(player) && balance >= totalCost。',
+      '分批堆叠发放：调用 player.getInventory().addItem()，超容时进行自动防刷保护拦截。',
+    ],
+  },
   warehouse: {
     title: '玩家仓库 (Warehouse) · 5×9 容器 + 36 格背包',
     bullets: [

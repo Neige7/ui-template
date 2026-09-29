@@ -200,6 +200,16 @@ export function createBaseServerState(activeScreen: ScreenId = 'warehouse'): Ser
         postage: 100,
       },
     },
+    chestShop: {
+      targetItem: null, // 编辑界面初始为空，显示待上架
+      currency: 'gold',
+      unitPrice: 50,
+      stock: 0,
+      maxStock: 5000,
+      buyAmount: 1,
+      shopTitle: '§6星辰私人箱子商店',
+      ownerName: 'Arthur_Pendragon',
+    },
     ui: {
       confirmDialog: null,
       textInputModal: null,

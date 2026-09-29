@@ -401,6 +401,95 @@ export const ItemIcon: React.FC<ItemIconProps> = ({ icon, rarity = 'common' }) =
         );
       }
 
+      case 'chest_shop':
+      case 'chest_gold': {
+        return (
+          <>
+            <rect x="2" y="3" width="12" height="10" fill="#a46628" />
+            <rect x="3" y="2" width="10" height="2" fill="#ffd369" />
+            <rect x="2" y="6" width="12" height="1" fill="#4a2e13" />
+            <rect x="7" y="5" width="2" height="3" fill="#ffffff" />
+            <rect x="7" y="6" width="2" height="2" fill="#d4a64a" />
+            <rect x="3" y="12" width="10" height="1" fill="#4a2e13" />
+            <rect x="4" y="8" width="2" height="2" fill="#ffd369" />
+            <rect x="10" y="8" width="2" height="2" fill="#ffd369" />
+          </>
+        );
+      }
+
+      case 'emerald': {
+        return (
+          <>
+            <rect x="6" y="1" width="4" height="2" fill="#55ff55" />
+            <rect x="4" y="3" width="8" height="2" fill="#22dd44" />
+            <rect x="3" y="5" width="10" height="6" fill="#17b037" />
+            <rect x="5" y="4" width="3" height="3" fill="#aaffaa" />
+            <rect x="5" y="7" width="6" height="3" fill="#0d8525" />
+            <rect x="4" y="11" width="8" height="2" fill="#17b037" />
+            <rect x="6" y="13" width="4" height="2" fill="#0b5e1b" />
+          </>
+        );
+      }
+
+      case 'cart_buy': {
+        return (
+          <>
+            <rect x="2" y="3" width="3" height="2" fill="#55ffff" />
+            <rect x="4" y="5" width="9" height="5" fill="#2d7fc7" />
+            <rect x="5" y="6" width="7" height="3" fill="#ffd369" />
+            <rect x="4" y="10" width="8" height="2" fill="#184a75" />
+            <rect x="5" y="12" width="2" height="2" fill="#ffffff" />
+            <rect x="10" y="12" width="2" height="2" fill="#ffffff" />
+          </>
+        );
+      }
+
+      case 'empty_slot':
+      case 'barrier': {
+        return (
+          <>
+            <rect x="3" y="3" width="10" height="1" fill="#ff5555" />
+            <rect x="3" y="12" width="10" height="1" fill="#ff5555" />
+            <rect x="3" y="3" width="1" height="10" fill="#ff5555" />
+            <rect x="12" y="3" width="1" height="10" fill="#ff5555" />
+            <rect x="5" y="5" width="6" height="6" fill="#aa0000" opacity={0.4} />
+            <rect x="7" y="5" width="2" height="6" fill="#ffffff" />
+            <rect x="5" y="7" width="6" height="2" fill="#ffffff" />
+          </>
+        );
+      }
+
+      case 'plus_qty': {
+        return (
+          <>
+            <rect x="3" y="3" width="10" height="10" fill="#1a3d24" />
+            <rect x="7" y="4" width="2" height="8" fill="#55ff55" />
+            <rect x="4" y="7" width="8" height="2" fill="#55ff55" />
+          </>
+        );
+      }
+
+      case 'minus_qty': {
+        return (
+          <>
+            <rect x="3" y="3" width="10" height="10" fill="#3d1a1a" />
+            <rect x="4" y="7" width="8" height="2" fill="#ff5555" />
+          </>
+        );
+      }
+
+      case 'price_tag': {
+        return (
+          <>
+            <rect x="4" y="3" width="8" height="9" fill="#e6b422" />
+            <rect x="5" y="4" width="6" height="7" fill="#ffd369" />
+            <rect x="7" y="5" width="2" height="2" fill="#181a26" />
+            <rect x="6" y="8" width="4" height="2" fill="#884400" />
+            <rect x="3" y="2" width="3" height="2" fill="#ff5555" />
+          </>
+        );
+      }
+
       default: {
         // 默认奇幻符文石色块 + 稀有度边框
         return (

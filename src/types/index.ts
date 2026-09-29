@@ -5,7 +5,26 @@ export type ScreenId =
   | 'pet'
   | 'mount'
   | 'guild'
-  | 'mail';
+  | 'mail'
+  | 'shop_edit'
+  | 'shop_buy';
+
+export type ShopCurrencyType = 'gold' | 'gems' | 'emerald';
+
+/**
+ * 5. 数据模型 - ChestShop (箱子商店插件)
+ * 支持单品上架、超大库存、多货币结算、背包容量校验
+ */
+export interface ChestShopState {
+  targetItem: Item | null; // 只能上架一个物品，初始为 null（待上架）
+  currency: ShopCurrencyType; // 货币类型：金币(Vault) / 点券(PlayerPoints) / 绿宝石
+  unitPrice: number; // 单价
+  stock: number; // 当前商店存储数量（支持超大数量，如 300）
+  maxStock: number; // 商店库存存储上限（如 5000）
+  buyAmount: number; // 购买界面拟购买数量（受背包剩余容量和商店库存约束）
+  shopTitle: string; // 商店名称
+  ownerName: string; // 店主名称
+}
 
 export type ClickType =
   | 'left'
@@ -392,6 +411,7 @@ export interface ServerState {
       postage: number;
     };
   };
+  chestShop: ChestShopState;
   ui: {
     confirmDialog: PendingConfirm | null;
     textInputModal: PendingTextInput | null;

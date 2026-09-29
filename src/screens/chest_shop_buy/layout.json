@@ -1,0 +1,34 @@
+{
+  "screen": "shop_buy",
+  "rows": 6,
+  "title": "§8[§a箱子商店 · 玩家选购中心§8]",
+  "clientMode": "mod_client_and_container_hybrid",
+  "slots": {
+    "0": { "type": "display", "label": "商店标语与店主信息" },
+    "4": { "type": "display", "label": "结算货币与单价汇总" },
+    "8": { "type": "hub_nav", "action": "nav_screen:shop_edit", "label": "前往店主编辑视角" },
+    "13": { "type": "display", "label": "商品展示核心槽位 (悬停查看属性/单价/库存/背包空间)" },
+    "18": { "type": "button", "action": "shop_buy_adjust_qty:-64", "label": "数量 -64" },
+    "19": { "type": "button", "action": "shop_buy_adjust_qty:-10", "label": "数量 -10" },
+    "20": { "type": "button", "action": "shop_buy_adjust_qty:-1", "label": "数量 -1" },
+    "21": { "type": "button", "action": "shop_buy_adjust_qty:min", "label": "归一 (MIN: 1)" },
+    "22": { "type": "button", "action": "shop_buy_qty_input", "mcInputSource": "anvil", "label": "拟购数量显示与直接编辑 (受背包空间约束)" },
+    "23": { "type": "button", "action": "shop_buy_adjust_qty:max", "label": "最大数量 (MAX: 自动取背包空间与库存极小值)" },
+    "24": { "type": "button", "action": "shop_buy_adjust_qty:+1", "label": "数量 +1" },
+    "25": { "type": "button", "action": "shop_buy_adjust_qty:+10", "label": "数量 +10" },
+    "26": { "type": "button", "action": "shop_buy_adjust_qty:+64", "label": "数量 +64" },
+    "29": { "type": "display", "label": "当前持币余额" },
+    "31": { "type": "button", "action": "shop_confirm_buy", "label": "确认购买并扣费结算" },
+    "33": { "type": "display", "label": "背包剩余容纳空间上限" },
+    "36-44": { "type": "display", "label": "总价核算与购买校验提示" },
+    "45-53": { "type": "display", "label": "底部辅助快捷区" },
+    "P0-P26": { "type": "storage", "label": "玩家 3×9 主背包 (展示购买前后物品分布)" },
+    "P27-P35": { "type": "storage", "label": "玩家 1×9 快捷栏 (展示购买前后物品分布)" }
+  },
+  "layers": ["background", "dynamic_text", "items"],
+  "notes": [
+    "购买数量调节受「背包内物品上限」与「商店库存」强约束，超过背包空间时自动限制并提示。",
+    "支持直接通过铁砧输入自定义数量 (shop_buy_qty_input)，输入值超出背包上限时自动截断。",
+    "购买成功后按原版 64 堆叠规则将商品分批装入玩家背包 P0~P35 空闲槽位。"
+  ]
+}

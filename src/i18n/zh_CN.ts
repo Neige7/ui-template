@@ -21,6 +21,8 @@ export const zh_CN = {
     mount: '§8[§b皇家坐骑兽栏§8]',
     guild: '§8[§6荣耀公会圣殿§8]',
     mail: '§8[§e信使猫头鹰驿站§8]',
+    shop_edit: '§8[§6箱子商店 · 商品管理与配置§8]',
+    shop_buy: '§8[§a箱子商店 · 玩家选购中心§8]',
   },
   categories: {
     all: '全部物品',

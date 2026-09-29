@@ -230,6 +230,10 @@ export const mockServer = {
         return handleMailAction(state, action);
       case 'guild':
         return handleGuildAction(state, action);
+      case 'shop_edit':
+        return handleShopEditAction(state, action);
+      case 'shop_buy':
+        return handleShopBuyAction(state, action);
       default:
         return { state, summary: '未定义界面动作' };
     }
@@ -247,6 +251,25 @@ function handlePlayerInventoryClick(
   const inv = state.player.inventory;
   const clickedItem = inv[pIdx];
   const cursor = state.player.cursorItem;
+
+  // 箱子商店编辑界面：点击背包槽位进行商品上架或存入库存 (新需求)
+  if (action.screen === 'shop_edit') {
+    return handleShopEditInventoryClick(state, pIdx, action);
+  }
+
+  // 箱子商店购买界面：点击背包槽位提示剩余空间与信息
+  if (action.screen === 'shop_buy') {
+    if (!clickedItem) {
+      return {
+        state: withToast(state, 'info', '空闲背包槽位，购买后的商品将优先放入此处'),
+        summary: `查看空闲背包槽位 P${pIdx}`,
+      };
+    }
+    return {
+      state: withToast(state, 'info', `背包物品: ${clickedItem.name} (${clickedItem.amount}/${clickedItem.maxStack})`),
+      summary: `查看背包槽位 P${pIdx} 物品 [${clickedItem.name}]`,
+    };
+  }
 
   // 数字键 1~9 与快捷栏 P27~P35 交换
   if (action.click === 'number_key') {
@@ -2175,4 +2198,615 @@ function handleGuildAction(
   }
 
   return { state, summary: `点击公会槽位 ${String(action.slot)}` };
+}
+
+// ==================== 箱子商店 (Chest Shop) 核心业务逻辑 ====================
+
+/**
+ * 计算玩家背包对于特定物品的最大剩余容纳上限
+ * 严格遍历 P0~P35 槽位：空槽位按 maxStack 累计，同类未满槽位按差额累计
+ */
+export function calculateMaxInventoryCapacity(
+  inventory: (Item | null)[],
+  targetItem: Item
+): number {
+  let capacity = 0;
+  for (let i = 0; i < 36; i++) {
+    const slot = inventory[i];
+    if (!slot) {
+      capacity += targetItem.maxStack;
+    } else if (canStackItems(slot, targetItem)) {
+      capacity += Math.max(0, targetItem.maxStack - slot.amount);
+    }
+  }
+  return capacity;
+}
+
+/**
+ * 获取玩家对应货币余额
+ */
+export function getPlayerCurrencyBalance(
+  player: ServerState['player'],
+  currency: 'gold' | 'gems' | 'emerald'
+): number {
+  if (currency === 'gold') return player.gold;
+  if (currency === 'gems') return player.gems;
+  if (currency === 'emerald') {
+    return player.inventory.reduce((sum, item) => {
+      if (item && (item.id === 'emerald' || item.id === 'coin_guild_token')) return sum + item.amount;
+      return sum;
+    }, 0);
+  }
+  return 0;
+}
+
+/**
+ * 扣除玩家对应货币
+ */
+function deductPlayerCurrency(
+  player: ServerState['player'],
+  currency: 'gold' | 'gems' | 'emerald',
+  cost: number
+): boolean {
+  if (currency === 'gold') {
+    if (player.gold < cost) return false;
+    player.gold -= cost;
+    return true;
+  }
+  if (currency === 'gems') {
+    if (player.gems < cost) return false;
+    player.gems -= cost;
+    return true;
+  }
+  if (currency === 'emerald') {
+    let remaining = cost;
+    for (let i = 0; i < player.inventory.length && remaining > 0; i++) {
+      const item = player.inventory[i];
+      if (item && (item.id === 'emerald' || item.id === 'coin_guild_token')) {
+        const take = Math.min(item.amount, remaining);
+        item.amount -= take;
+        remaining -= take;
+        if (item.amount <= 0) player.inventory[i] = null;
+      }
+    }
+    return remaining === 0;
+  }
+  return false;
+}
+
+/**
+ * 商店编辑视角：处理点击玩家背包 P0~P35 进行上架或存入库存
+ */
+function handleShopEditInventoryClick(
+  state: ServerState,
+  pIdx: number,
+  _action: GuiAction
+): ServerHandleResult {
+  const inv = state.player.inventory;
+  const clickedItem = inv[pIdx];
+  const shop = state.chestShop;
+
+  if (!clickedItem) {
+    return {
+      state: withToast(state, 'info', '空闲背包槽位，请点击有物品的槽位进行上架'),
+      summary: `点击背包空槽位 P${pIdx}`,
+    };
+  }
+
+  // 1. 商店初始为空（待上架）：点击背包内物品尝试上架
+  if (!shop.targetItem) {
+    const itemName = clickedItem.name;
+    const initialStock = clickedItem.amount;
+    // 将该物品设定为上架商品
+    shop.targetItem = { ...clickedItem, amount: 1 };
+    shop.stock = initialStock;
+    shop.buyAmount = 1;
+    inv[pIdx] = null; // 背包中该组物品已存入商店作为初始库存
+
+    return {
+      state: withToast(
+        state,
+        'success',
+        `🎉 成功上架商品: ${itemName}！初始存入 ${initialStock} 件库存，可在上方配置单价与货币类型。`
+      ),
+      summary: `上架背包物品 [${itemName}] 至箱子商店，初始库存 ${initialStock}`,
+    };
+  }
+
+  // 2. 商店已存在上架物品：点击同类物品存入库存，点击异类物品提示单一上架限制
+  if (canStackItems(clickedItem, shop.targetItem)) {
+    const space = Math.max(0, shop.maxStock - shop.stock);
+    if (space <= 0) {
+      return {
+        state: withToast(state, 'warning', `商店库存已满（上限 ${shop.maxStock} 件），无法存入更多！`),
+        summary: '商店库存已达容量上限',
+      };
+    }
+    const depositAmount = Math.min(space, clickedItem.amount);
+    shop.stock += depositAmount;
+    clickedItem.amount -= depositAmount;
+    if (clickedItem.amount <= 0) {
+      inv[pIdx] = null;
+    }
+    return {
+      state: withToast(
+        state,
+        'success',
+        `已将 ${depositAmount} 个 ${clickedItem.name} 存入商店库存！当前库存: ${shop.stock}/${shop.maxStock}`
+      ),
+      summary: `背包向商店存入 ${depositAmount} 件 [${clickedItem.name}]，当前总库存 ${shop.stock}`,
+    };
+  }
+
+  return {
+    state: withToast(
+      state,
+      'warning',
+      `箱子商店仅支持单一物品上架！当前已上架「${shop.targetItem.name}」，请先点击下架按钮。`
+    ),
+    summary: '箱子商店单品上架限制拦截',
+  };
+}
+
+/**
+ * 商店编辑界面 (shop_edit) 容器槽位动作处理
+ */
+function handleShopEditAction(state: ServerState, action: GuiAction): ServerHandleResult {
+  const shop = state.chestShop;
+  const payload = (typeof action.payload === 'object' && action.payload ? action.payload : {}) as Record<string, unknown>;
+  const payloadAction = typeof payload.action === 'string' ? payload.action : '';
+
+  // 1. 切换/选择结算货币
+  if (payloadAction === 'shop_switch_currency') {
+    const nextCurrency: Record<'gold' | 'gems' | 'emerald', 'gold' | 'gems' | 'emerald'> = {
+      gold: 'gems',
+      gems: 'emerald',
+      emerald: 'gold',
+    };
+    shop.currency = nextCurrency[shop.currency];
+    const labels = { gold: '金币 (🪙 Vault)', gems: '点券 (💎 PlayerPoints)', emerald: '绿宝石 (❇️ 原版货币)' };
+    return {
+      state: withToast(state, 'info', `已将商店结算货币切换为: ${labels[shop.currency]}`),
+      summary: `切换商店货币 -> ${shop.currency}`,
+    };
+  }
+
+  if (payloadAction === 'shop_set_currency') {
+    const currency = payload.currency as 'gold' | 'gems' | 'emerald';
+    if (currency) {
+      shop.currency = currency;
+      const labels = { gold: '金币 (🪙 Vault)', gems: '点券 (💎 PlayerPoints)', emerald: '绿宝石 (❇️ 原版货币)' };
+      return {
+        state: withToast(state, 'info', `已设置商店结算货币: ${labels[shop.currency]}`),
+        summary: `指定商店货币 -> ${shop.currency}`,
+      };
+    }
+  }
+
+  // 2. 调整单价 (+- 按钮)
+  if (payloadAction === 'shop_adjust_price') {
+    const delta = typeof payload.delta === 'number' ? payload.delta : 0;
+    shop.unitPrice = Math.max(1, shop.unitPrice + delta);
+    return {
+      state: withToast(state, 'info', `已调整单价: ${shop.unitPrice}`),
+      summary: `调整商品单价 -> ${shop.unitPrice}`,
+    };
+  }
+
+  // 3. 直接输入自定义单价 (铁砧弹窗)
+  if (payloadAction === 'shop_price_input') {
+    if (typeof payload.inputText === 'string') {
+      state.ui.textInputModal = null;
+      const parsed = parseInt(payload.inputText, 10);
+      if (isNaN(parsed) || parsed <= 0) {
+        return {
+          state: withToast(state, 'error', '请输入大于 0 的有效整数单价！'),
+          summary: '单价输入格式非法',
+        };
+      }
+      shop.unitPrice = parsed;
+      return {
+        state: withToast(state, 'success', `单价已设定为: ${shop.unitPrice}`),
+        summary: `自定义单价输入成功 -> ${shop.unitPrice}`,
+      };
+    }
+
+    state.ui.textInputModal = {
+      title: '§e💰 输入商品单件售价',
+      placeholder: `当前单价: ${shop.unitPrice}，请输入新单价...`,
+      defaultValue: String(shop.unitPrice),
+      mcSource: 'anvil',
+      maxLength: 10,
+      targetAction: {
+        screen: 'shop_edit',
+        slot: action.slot,
+        click: 'left',
+        payload: { action: 'shop_price_input' },
+      },
+    };
+    return { state, summary: '打开单价直接输入框' };
+  }
+
+  // 4. 直接输入超大库存数量 (铁砧弹窗，比如 300)
+  if (payloadAction === 'shop_stock_input') {
+    if (typeof payload.inputText === 'string') {
+      state.ui.textInputModal = null;
+      const parsed = parseInt(payload.inputText, 10);
+      if (isNaN(parsed) || parsed < 0) {
+        return {
+          state: withToast(state, 'error', '请输入大于等于 0 的有效库存数量！'),
+          summary: '库存输入格式非法',
+        };
+      }
+      const clamped = Math.min(shop.maxStock, parsed);
+      shop.stock = clamped;
+      return {
+        state: withToast(
+          state,
+          'success',
+          `商店库存已设定为: ${shop.stock}/${shop.maxStock} 件 ${parsed > shop.maxStock ? `(已限制为上限 ${shop.maxStock})` : ''}`
+        ),
+        summary: `直接设定库存数量 -> ${shop.stock}`,
+      };
+    }
+
+    state.ui.textInputModal = {
+      title: '§b📦 设定商店超大库存数量',
+      placeholder: `请输入当前库存件数 (0~${shop.maxStock}，如 300)...`,
+      defaultValue: String(shop.stock),
+      mcSource: 'anvil',
+      maxLength: 8,
+      targetAction: {
+        screen: 'shop_edit',
+        slot: action.slot,
+        click: 'left',
+        payload: { action: 'shop_stock_input' },
+      },
+    };
+    return { state, summary: '打开库存直接输入框' };
+  }
+
+  // 5. 一键设置预设超大库存 (如 300 件)
+  if (payloadAction === 'shop_set_stock_quick') {
+    const amount = typeof payload.amount === 'number' ? payload.amount : 300;
+    shop.stock = Math.min(shop.maxStock, amount);
+    return {
+      state: withToast(state, 'success', `已一键设定商店库存为 ${shop.stock} 件 (演示超大数量存储)！`),
+      summary: `一键快捷设置库存 -> ${shop.stock}`,
+    };
+  }
+
+  // 6. 从背包存入商品至商店 (+64 或 全部存入)
+  if (payloadAction === 'shop_deposit_from_inv') {
+    if (!shop.targetItem) {
+      return {
+        state: withToast(state, 'warning', '请先在下方背包中点击物品完成上架！'),
+        summary: '未上架商品无法存入库存',
+      };
+    }
+    const mode = payload.mode === 'all' ? 'all' : 'stack';
+    let totalDeposited = 0;
+    const inv = state.player.inventory;
+
+    for (let i = 0; i < 36; i++) {
+      const item = inv[i];
+      if (item && canStackItems(item, shop.targetItem)) {
+        const canTake = Math.min(
+          shop.maxStock - shop.stock,
+          mode === 'all' ? item.amount : Math.min(64 - totalDeposited, item.amount)
+        );
+        if (canTake > 0) {
+          shop.stock += canTake;
+          item.amount -= canTake;
+          totalDeposited += canTake;
+          if (item.amount <= 0) inv[i] = null;
+        }
+        if (mode !== 'all' && totalDeposited >= 64) break;
+        if (shop.stock >= shop.maxStock) break;
+      }
+    }
+
+    if (totalDeposited === 0) {
+      return {
+        state: withToast(state, 'warning', `背包内未找到更多同类物品「${shop.targetItem.name}」可供存入`),
+        summary: '存入库存未找到同类物品',
+      };
+    }
+
+    return {
+      state: withToast(state, 'success', `已从背包向商店存入 ${totalDeposited} 件物品，现库存: ${shop.stock}/${shop.maxStock}`),
+      summary: `从背包存入 ${totalDeposited} 件库存`,
+    };
+  }
+
+  // 7. 从商店取出库存至玩家背包 (-64 或 全部取出)
+  if (payloadAction === 'shop_withdraw_to_inv') {
+    if (!shop.targetItem || shop.stock <= 0) {
+      return {
+        state: withToast(state, 'warning', '当前商店库存为空，无物品可取出！'),
+        summary: '库存为空无法取出',
+      };
+    }
+    const mode = payload.mode === 'all' ? 'all' : 'stack';
+    const wantWithdraw = mode === 'all' ? shop.stock : Math.min(64, shop.stock);
+    const { nextSlots, remainingAmount } = insertItemIntoSlots(
+      state.player.inventory,
+      { ...shop.targetItem, amount: wantWithdraw }
+    );
+    const actuallyWithdrawn = wantWithdraw - remainingAmount;
+    if (actuallyWithdrawn <= 0) {
+      return {
+        state: withToast(state, 'error', '背包已满，无法容纳更多物品！'),
+        summary: '背包已满取出失败',
+      };
+    }
+    state.player.inventory = nextSlots;
+    shop.stock -= actuallyWithdrawn;
+    return {
+      state: withToast(
+        state,
+        'info',
+        `已将 ${actuallyWithdrawn} 件商品取出至背包，商店剩余库存: ${shop.stock} 件`
+      ),
+      summary: `从商店取出 ${actuallyWithdrawn} 件至背包`,
+    };
+  }
+
+  // 8. 下架清空 (退回所有库存到玩家背包)
+  if (payloadAction === 'shop_unlist') {
+    if (!shop.targetItem) {
+      return {
+        state: withToast(state, 'info', '当前没有已上架的商品'),
+        summary: '空商店无需下架',
+      };
+    }
+    const itemToReturn = shop.targetItem;
+    const stockToReturn = shop.stock;
+    if (stockToReturn > 0) {
+      const { nextSlots, remainingAmount } = insertItemIntoSlots(
+        state.player.inventory,
+        { ...itemToReturn, amount: stockToReturn }
+      );
+      state.player.inventory = nextSlots;
+      if (remainingAmount > 0) {
+        state = withToast(
+          state,
+          'warning',
+          `背包空间不足，${remainingAmount} 件物品未能装入背包，已自动暂存或掉落！`
+        );
+      }
+    }
+    shop.targetItem = null;
+    shop.stock = 0;
+    shop.buyAmount = 1;
+    return {
+      state: withToast(state, 'warning', `已下架商品「${itemToReturn.name}」并退回库存！`),
+      summary: `下架商品 [${itemToReturn.name}]`,
+    };
+  }
+
+  // 9. 核心展示槽位交互
+  if (action.slot === 13 || action.slot === 22) {
+    if (action.click === 'right' && shop.targetItem) {
+      return handleShopEditAction(state, {
+        ...action,
+        payload: { action: 'shop_unlist' },
+      });
+    }
+    if (!shop.targetItem) {
+      return {
+        state: withToast(state, 'info', '💡 请在下方玩家背包 (P0~P35) 中点击任意物品进行上架！'),
+        summary: '点击待上架槽位提示操作',
+      };
+    }
+  }
+
+  return { state, summary: `点击商店编辑槽位 ${String(action.slot)}` };
+}
+
+/**
+ * 玩家购买界面 (shop_buy) 容器槽位动作处理
+ */
+function handleShopBuyAction(state: ServerState, action: GuiAction): ServerHandleResult {
+  const shop = state.chestShop;
+  const payload = (typeof action.payload === 'object' && action.payload ? action.payload : {}) as Record<string, unknown>;
+  const payloadAction = typeof payload.action === 'string' ? payload.action : '';
+
+  if (!shop.targetItem) {
+    return {
+      state: withToast(state, 'warning', '店主暂未上架任何商品，无法进行购买！'),
+      summary: '商店未上架商品无法购买',
+    };
+  }
+
+  // 计算玩家背包对于该物品的最大容纳空间
+  const maxInventorySpace = calculateMaxInventoryCapacity(state.player.inventory, shop.targetItem);
+
+  // 1. 调整购买数量 (+- 按钮, min, max)
+  if (payloadAction === 'shop_buy_adjust_qty') {
+    const delta = payload.delta;
+
+    if (maxInventorySpace <= 0) {
+      return {
+        state: withToast(state, 'error', '背包已满，无法容纳更多该物品！请先清理背包。'),
+        summary: '背包已满拦截数量增加',
+      };
+    }
+
+    let newQty = shop.buyAmount;
+    if (delta === 'min') {
+      newQty = 1;
+    } else if (delta === 'max') {
+      newQty = Math.min(shop.stock, maxInventorySpace);
+    } else if (typeof delta === 'number') {
+      newQty += delta;
+    }
+
+    // 关键约束：数量不能超过背包内物品上限，也不能超过商店库存
+    if (newQty > maxInventorySpace) {
+      shop.buyAmount = Math.max(1, Math.min(shop.stock, maxInventorySpace));
+      return {
+        state: withToast(
+          state,
+          'warning',
+          `购买数量不能超过背包剩余容纳空间 (${maxInventorySpace} 件)!`
+        ),
+        summary: `购买数量被背包空间限制为 ${maxInventorySpace}`,
+      };
+    }
+
+    if (newQty > shop.stock) {
+      shop.buyAmount = Math.max(1, shop.stock);
+      return {
+        state: withToast(
+          state,
+          'warning',
+          `购买数量不能超过商店现有库存 (${shop.stock} 件)!`
+        ),
+        summary: `购买数量被商店库存限制为 ${shop.stock}`,
+      };
+    }
+
+    shop.buyAmount = Math.max(1, newQty);
+    return {
+      state,
+      summary: `调整购买数量 -> ${shop.buyAmount}`,
+    };
+  }
+
+  // 2. 直接编辑数量 (铁砧弹窗输入)
+  if (payloadAction === 'shop_buy_qty_input') {
+    if (typeof payload.inputText === 'string') {
+      state.ui.textInputModal = null;
+      const parsed = parseInt(payload.inputText, 10);
+      if (isNaN(parsed) || parsed <= 0) {
+        return {
+          state: withToast(state, 'error', '请输入有效的正整数购买数量！'),
+          summary: '购买数量输入非法',
+        };
+      }
+
+      if (parsed > maxInventorySpace) {
+        shop.buyAmount = Math.max(1, Math.min(shop.stock, maxInventorySpace));
+        return {
+          state: withToast(
+            state,
+            'warning',
+            `输入数量超出背包剩余空间，已限制为背包最大容量: ${maxInventorySpace} 件！`
+          ),
+          summary: `输入数量超过背包上限限制为 ${maxInventorySpace}`,
+        };
+      }
+
+      if (parsed > shop.stock) {
+        shop.buyAmount = Math.max(1, shop.stock);
+        return {
+          state: withToast(
+            state,
+            'warning',
+            `输入数量超出商店库存，已限制为商店现有库存: ${shop.stock} 件！`
+          ),
+          summary: `输入数量超过商店库存限制为 ${shop.stock}`,
+        };
+      }
+
+      shop.buyAmount = parsed;
+      return {
+        state: withToast(state, 'success', `已设定拟购买数量为: ${shop.buyAmount} 件`),
+        summary: `直接设定购买数量 -> ${shop.buyAmount}`,
+      };
+    }
+
+    state.ui.textInputModal = {
+      title: '§b🛒 输入购买数量',
+      placeholder: `当前背包最多可装入: ${maxInventorySpace} 件，请输入...`,
+      defaultValue: String(shop.buyAmount),
+      mcSource: 'anvil',
+      maxLength: 6,
+      targetAction: {
+        screen: 'shop_buy',
+        slot: action.slot,
+        click: 'left',
+        payload: { action: 'shop_buy_qty_input' },
+      },
+    };
+    return { state, summary: '打开购买数量直接输入框' };
+  }
+
+  // 3. 确认购买结算
+  if (payloadAction === 'shop_confirm_buy') {
+    const buyQty = shop.buyAmount;
+    if (buyQty <= 0) {
+      return {
+        state: withToast(state, 'warning', '请选择至少 1 件购买数量！'),
+        summary: '购买数量为0',
+      };
+    }
+
+    if (shop.stock < buyQty) {
+      return {
+        state: withToast(state, 'error', `商店库存不足！当前仅剩 ${shop.stock} 件。`),
+        summary: '库存不足无法购买',
+      };
+    }
+
+    if (buyQty > maxInventorySpace) {
+      return {
+        state: withToast(
+          state,
+          'error',
+          `背包空间不足！背包仅能容纳 ${maxInventorySpace} 件，当前尝试购买 ${buyQty} 件。`
+        ),
+        summary: '背包空间不足拦截购买',
+      };
+    }
+
+    const totalCost = buyQty * shop.unitPrice;
+    const balance = getPlayerCurrencyBalance(state.player, shop.currency);
+    const currencyNames = { gold: '金币', gems: '点券', emerald: '绿宝石' };
+    const currencyName = currencyNames[shop.currency];
+
+    if (balance < totalCost) {
+      return {
+        state: withToast(
+          state,
+          'error',
+          `余额不足！总价需 ${totalCost.toLocaleString()} ${currencyName}，您仅持有 ${balance.toLocaleString()} ${currencyName}。`
+        ),
+        summary: '货币余额不足拦截购买',
+      };
+    }
+
+    // 扣除货币
+    deductPlayerCurrency(state.player, shop.currency, totalCost);
+
+    // 扣除商店库存
+    shop.stock -= buyQty;
+
+    // 将物品按照 64 堆叠规则分配入玩家背包
+    const { nextSlots, remainingAmount } = insertItemIntoSlots(
+      state.player.inventory,
+      { ...shop.targetItem, amount: buyQty }
+    );
+    state.player.inventory = nextSlots;
+
+    if (remainingAmount > 0) {
+      // 容错保护
+      shop.stock += remainingAmount;
+    }
+
+    // 重置购买数量至有效区间
+    shop.buyAmount = Math.max(1, Math.min(shop.stock, calculateMaxInventoryCapacity(state.player.inventory, shop.targetItem)));
+
+    return {
+      state: withToast(
+        state,
+        'success',
+        `🎉 购买成功！支付 ${totalCost.toLocaleString()} ${currencyName}，已购得 ${buyQty} 个 ${shop.targetItem.name} 并放入背包！`
+      ),
+      summary: `玩家购买 [${shop.targetItem.name}] × ${buyQty}，花费 ${totalCost} ${currencyName}`,
+    };
+  }
+
+  return { state, summary: `点击商店购买槽位 ${String(action.slot)}` };
 }
