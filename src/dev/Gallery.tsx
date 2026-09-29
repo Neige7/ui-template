@@ -29,6 +29,12 @@ import { WarehouseScreen } from '../screens/warehouse/WarehouseScreen';
 import { ActionLogEntry, GuiAction, ScreenId, ServerState } from '../types';
 import { DebugOverlayBanner } from './DebugOverlay';
 import { runCoreUnitTests, TestRunnerModal } from './TestRunnerModal';
+import { AgentGuideModal } from './AgentGuideModal';
+import {
+  AGENT_TEN_COMMANDMENTS,
+  AGENT_DEVELOPMENT_STEPS,
+  AGENT_THREE_ARTIFACTS,
+} from '../docs/agentGuide';
 
 const SCREEN_NAV_ITEMS: {
   id: ScreenId;
@@ -61,9 +67,10 @@ export const Gallery: React.FC = () => {
     },
   ]);
   const [rightTab, setRightTab] = useState<
-    'readme' | 'layout_json' | 'action_log' | 'porting_report'
+    'readme' | 'layout_json' | 'action_log' | 'porting_report' | 'agent_md'
   >('readme');
   const [testModalOpen, setTestModalOpen] = useState(false);
+  const [agentGuideModalOpen, setAgentGuideModalOpen] = useState(false);
 
   const unitTests = runCoreUnitTests();
   const allPassed = unitTests.every((t) => t.passed);
@@ -353,6 +360,24 @@ export const Gallery: React.FC = () => {
                 {unitTests.filter((t) => t.passed).length}/{unitTests.length} PASS
               </span>
             </button>
+
+            <button
+              type="button"
+              className="wb-btn"
+              style={{
+                width: '100%',
+                justifyContent: 'space-between',
+                borderColor: '#4d5b88',
+                color: '#ffd369',
+                background: '#1d2238',
+              }}
+              onClick={() => setAgentGuideModalOpen(true)}
+            >
+              <span>📜 AGENT.MD 研发准则与执行手册</span>
+              <span className="wb-badge" style={{ color: '#ffd369', borderColor: '#ffd369' }}>
+                研发宪章
+              </span>
+            </button>
           </div>
         </aside>
 
@@ -418,45 +443,53 @@ export const Gallery: React.FC = () => {
         <aside className="workbench-right-drawer">
           <div
             style={{
-              padding: '10px 12px',
+              padding: '8px 10px',
               borderBottom: '1px solid #262b40',
               display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '4px',
+              gridTemplateColumns: 'repeat(5, 1fr)',
+              gap: '3px',
               background: '#161926',
             }}
           >
             <button
               type="button"
               className={`wb-btn ${rightTab === 'readme' ? 'active' : ''}`}
-              style={{ padding: '5px 4px', fontSize: '11px' }}
+              style={{ padding: '5px 2px', fontSize: '10px' }}
               onClick={() => setRightTab('readme')}
             >
-              📘 交互说明
+              📘 说明
             </button>
             <button
               type="button"
               className={`wb-btn ${rightTab === 'layout_json' ? 'active' : ''}`}
-              style={{ padding: '5px 4px', fontSize: '11px' }}
+              style={{ padding: '5px 2px', fontSize: '10px' }}
               onClick={() => setRightTab('layout_json')}
             >
-              🧩 layout.json
+              🧩 布局
+            </button>
+            <button
+              type="button"
+              className={`wb-btn ${rightTab === 'agent_md' ? 'active' : ''}`}
+              style={{ padding: '5px 2px', fontSize: '10px', color: '#ffd369' }}
+              onClick={() => setRightTab('agent_md')}
+            >
+              📜 宪章
             </button>
             <button
               type="button"
               className={`wb-btn ${rightTab === 'action_log' ? 'active' : ''}`}
-              style={{ padding: '5px 4px', fontSize: '11px' }}
+              style={{ padding: '5px 2px', fontSize: '10px' }}
               onClick={() => setRightTab('action_log')}
             >
-              ⚡ GuiAction({actionLogs.length})
+              ⚡ 动作({actionLogs.length})
             </button>
             <button
               type="button"
               className={`wb-btn ${rightTab === 'porting_report' ? 'active' : ''}`}
-              style={{ padding: '5px 4px', fontSize: '11px' }}
+              style={{ padding: '5px 2px', fontSize: '10px' }}
               onClick={() => setRightTab('porting_report')}
             >
-              📦 移植报告
+              📦 报告
             </button>
           </div>
 
@@ -646,7 +679,129 @@ export const Gallery: React.FC = () => {
               </div>
             )}
 
-            {/* Tab 4: P0~P7 阶段验收报告与移植指南汇总 */}
+            {/* Tab 3: AGENT.MD 研发准则与军规 */}
+            {rightTab === 'agent_md' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div
+                  style={{
+                    padding: '10px',
+                    background: '#1d2238',
+                    border: '1px solid #4a5482',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span style={{ color: '#ffd369', fontWeight: 700, fontSize: '13px' }}>
+                      📜 AGENT.MD 研发宪章
+                    </span>
+                    <button
+                      type="button"
+                      className="wb-btn active"
+                      style={{ padding: '3px 8px', fontSize: '11px', color: '#ffd369' }}
+                      onClick={() => setAgentGuideModalOpen(true)}
+                    >
+                      ⛶ 展开大窗
+                    </button>
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#b8c3e8' }}>
+                    法定地位：本项目后续所有功能迭代与 Bug 修复，<strong>必须无条件遵守 AGENT.MD</strong> 规范。
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: '10px',
+                    background: '#141724',
+                    border: '1px solid #2e354e',
+                  }}
+                >
+                  <div style={{ color: '#55ffff', fontWeight: 700, marginBottom: '6px' }}>
+                    📌 单界面三件套交付标准
+                  </div>
+                  {AGENT_THREE_ARTIFACTS.map((art) => (
+                    <div
+                      key={art.name}
+                      style={{
+                        marginBottom: '6px',
+                        fontSize: '11px',
+                        borderBottom: '1px dashed #282f47',
+                        paddingBottom: '4px',
+                      }}
+                    >
+                      <strong style={{ color: '#ffd369' }}>{art.name}</strong>
+                      <div style={{ color: '#a0aac8' }}>{art.desc}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div
+                  style={{
+                    padding: '10px',
+                    background: '#141724',
+                    border: '1px solid #2e354e',
+                  }}
+                >
+                  <div style={{ color: '#55ff55', fontWeight: 700, marginBottom: '6px' }}>
+                    ⚔ Agent 研发十诫 (精选)
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {AGENT_TEN_COMMANDMENTS.slice(0, 5).map((cmd) => (
+                      <div key={cmd.id} style={{ fontSize: '11px' }}>
+                        <span style={{ color: '#ff5555', fontWeight: 700 }}>
+                          [{cmd.id}]
+                        </span>{' '}
+                        <strong style={{ color: '#ffd369' }}>{cmd.rule}</strong>
+                        <div style={{ color: '#97a2c8', marginLeft: '6px' }}>
+                          {cmd.detail}
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      className="wb-btn"
+                      style={{ marginTop: '4px', padding: '4px 6px', fontSize: '10px' }}
+                      onClick={() => setAgentGuideModalOpen(true)}
+                    >
+                      查看全部 10 项军规与 SOP 8步 →
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: '10px',
+                    background: '#141724',
+                    border: '1px solid #2e354e',
+                  }}
+                >
+                  <div style={{ color: '#ffd369', fontWeight: 700, marginBottom: '4px' }}>
+                    ⚙ SOP 开发流程
+                  </div>
+                  {AGENT_DEVELOPMENT_STEPS.slice(0, 4).map((s) => (
+                    <div
+                      key={s.step}
+                      style={{
+                        marginBottom: '4px',
+                        fontSize: '11px',
+                        color: '#b8c3e8',
+                      }}
+                    >
+                      <span style={{ color: '#55ffff' }}>▶</span> {s.step}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Tab 5: P0~P7 阶段验收报告与移植指南汇总 */}
             {rightTab === 'porting_report' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div
