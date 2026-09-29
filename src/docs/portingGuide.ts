@@ -40,8 +40,8 @@ export const SCREEN_READMES: Record<ScreenId, { title: string; bullets: string[]
     title: '箱子商店 · 玩家购买选购 (Chest Shop Buy) · 6×9 容器 + 36 格背包',
     bullets: [
       '展示透明：居中槽位 13 直观展示商品属性、货币类型、单件售价、当前剩余库存与买家背包可用容量。',
-      '数量调节与背包强约束：可用 +- 增减数量或铁砧直接编辑，但购买数量绝对禁止超过背包内物品上限！',
-      'MAX 智能拉满：一键计算 min(商店库存, 背包剩余上限, 余额可购数)，一键装载最大合理数量。',
+      '数量调节与背包强约束：可用 +- 增减数量或铁砧直接编辑，但拟购数量绝对禁止超过背包内物品上限或商店库存。',
+      'MAX 智能拉满：一键计算 min(商店库存, 背包剩余上限)；确认购买时再校验余额是否足够。',
       '实时背包联动：下方 36 格背包直观渲染，购买扣费成功后商品按照原版 64 堆叠规则整齐划一落入背包。',
     ],
     mcPortingNotes: [
@@ -176,6 +176,11 @@ export const STAGE_REPORTS = [
     stage: 'P7 导出与移植文档打磨',
     status: '✔ 已完成',
     deliverables: 'docs/porting-guide.md、内置核心逻辑自动化单元测试套件、奇幻简约 RPG 像素视觉统一',
+  },
+  {
+    stage: 'P8 箱子商店',
+    status: '✔ 已完成',
+    deliverables: 'ChestShopEditScreen、ChestShopBuyScreen、ChestShopState、6 行容器布局与 README；单品上架、超大库存、多货币结算和购买容量校验',
   },
 ];
 

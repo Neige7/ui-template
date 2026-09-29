@@ -59,7 +59,7 @@ export const AGENT_TEN_COMMANDMENTS: AgentRuleItem[] = [
 
 export const AGENT_DEVELOPMENT_STEPS = [
   { step: '步骤 1: MC 可行性评估', desc: '确认需求能否落在 9 列槽位网格上？能否对应 Bukkit/Mod 机制？若不能，拒绝并提出符合 MC 的替代方案。' },
-  { step: '步骤 2: 规划槽位分配与 layout.json', desc: '在纸面/草稿中确定 0~44 槽位功能，编辑或新建对应的 layout.json。' },
+  { step: '步骤 2: 规划槽位分配与 layout.json', desc: '按界面 rows 确定 0~53（5 行界面为 0~44）槽位功能，编辑或新建对应的 layout.json。' },
   { step: '步骤 3: 扩充/核对类型定义', desc: '在 src/types/index.ts 中追加新的 Action 动作名、数据模型字段。' },
   { step: '步骤 4: 实现 mockServer 状态机纯函数', desc: '在 src/mock/server.ts 中编写对应 action 的处理分支，返回全新的不可变状态 (Immutable State) 与描述文本。' },
   { step: '步骤 5: 编写或更新 Screen 组件', desc: '仅通过 dispatchAction 发送 GuiAction，读取 serverState 渲染视图，支持 6 大视觉状态。' },
@@ -70,6 +70,6 @@ export const AGENT_DEVELOPMENT_STEPS = [
 
 export const AGENT_THREE_ARTIFACTS = [
   { name: '1. 可交互 Web 原型组件', path: 'src/screens/{name}/{Name}Screen.tsx', desc: '具备完整 6 大视觉状态，严格以 dispatchAction 发送 GuiAction，无缝支持桌面键鼠操作。' },
-  { name: '2. 槽位布局配置文件', path: 'src/screens/{name}/layout.json', desc: '声明 rows、slots (0~44, P0~P35)、layers (background, dynamic_text, items)、mcInputSource 等。' },
+  { name: '2. 槽位布局配置文件', path: 'src/screens/{name}/layout.json', desc: '声明 rows、slots（按 rows 为 0~44 或 0~53，另含 P0~P35）、layers (background, dynamic_text, items)、mcInputSource 等。' },
   { name: '3. 交互与移植说明文档', path: 'src/screens/{name}/README.md', desc: '向服务端/模组开发者详细说明槽位动作映射、边界拦截、二次确认、以及 Java 移植范例代码。' },
 ];

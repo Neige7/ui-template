@@ -9,7 +9,7 @@
    - 标准容器宽度：`176 px`（9 列 × 18 px = 162 px，左右各留 7 px 边框边距，与原版箱子 `generic_54.png` 完全一致）。
    - 全局缩放因子：`--gui-scale` 支持 `2x / 3x / 4x` 整数倍缩放，严格开启 `image-rendering: pixelated`。
 2. **槽位索引模型（3.2）**：
-   - 容器主区域：最多 6 行，索引为 `0 ~ rows*9 - 1`（本库 7 个界面统一采用 5 行 = `0 ~ 44`）。
+   - 容器主区域：最多 6 行，索引为 `0 ~ rows*9 - 1`；7 个常规界面采用 5 行 (`0 ~ 44`)，箱子商店 `shop_edit` / `shop_buy` 采用 6 行 (`0 ~ 53`)。
    - 玩家背包区域：3×9 主背包（`P0 ~ P26`）+ 1×9 快捷栏（`P27 ~ P35`），共 36 格。
 3. **单一交互抽象 `GuiAction`（3.3）**：
    - 没有任何前端 UI 组件直接修改业务状态。
@@ -34,14 +34,35 @@
 ## 3. 文本输入源桥接规范 (`mcInputSource`)
 
 针对搜索、改名、CDK 兑换、写信与创建公会等需要输入文本的场景，原型中通过 `TextInputModal` 明确标注了 MC 落地方案：
-- **`anvil`（铁砧输入 `AnvilGUI`）**：用于仓库搜索（槽位 8）、灵宠/坐骑改名（槽位 43）、CDK 兑换（槽位 11）、公会创建（槽位 4）及收件人/标题输入。
+- **`anvil`（铁砧输入 `AnvilGUI`）**：用于仓库搜索（槽位 8）、灵宠/坐骑改名（槽位 43）、CDK 兑换（槽位 11）、公会创建（槽位 4）、收件人/标题输入，以及箱子商店单价/库存/购买数量输入（`shop_edit` 槽位 21/22，`shop_buy` 槽位 22）。
 - **`sign`（告示牌输入 `SignGUI`）**：用于公会公告多行编辑（槽位 19/21）。
 - **`chat`（聊天栏捕获 `AsyncPlayerChatEvent`）**：用于长篇邮件正文输入（槽位 12）。
 - **`mod_textfield`（模组客户端 `EditBox / GuiTextField`）**：由于服务器采用模组客户端（用户确认项 2），可在客户端 GUI 直接内嵌原生 `EditBox` 控件并通过 CustomPayload 发包至服务端，体验更丝滑。
 
 ---
 
-## 4. 七大界面汇总与组件复用对照
+## 4. 箱子商店移植契约
+
+箱子商店由 `shop_edit`（店主管理）和 `shop_buy`（玩家购买）两个 6 行容器界面组成。两者共享 `ServerState.chestShop`，其关键字段为 `targetItem`、`currency`、`unitPrice`、`stock`、`maxStock` 和 `buyAmount`。编辑界面初始 `targetItem = null`，点击 `P0~P35` 中的物品完成单品上架；上架后只能存入同类物品。
+
+| 界面 | 关键槽位 | 服务端必须执行的动作 |
+|---|---|---|
+| `shop_edit` | `2/3/4` 货币、`11/12/14/15/19/25` 调价、`21/22` 铁砧输入、`28~32` 存取与快捷库存、`34` 下架 | 校验单品限制与 `maxStock`，下架时把库存安全退回玩家背包；货币类型映射 Vault、PlayerPoints 或绿宝石 |
+| `shop_buy` | `13` 商品、`18~26` 数量、`23` MAX、`31` 确认购买、`33` 背包容量 | 重新计算背包可容纳量，并串行校验库存、容量和余额后再扣款、扣库存、分批发放物品 |
+
+购买校验必须满足：
+
+```text
+buyQty <= shop.stock
+buyQty <= calculateMaxInventoryCapacity(player, shop.targetItem)
+buyQty * shop.unitPrice <= getPlayerCurrencyBalance(player, shop.currency)
+```
+
+校验和扣款都必须在服务端完成，不能信任客户端传入的数量或总价。完整槽位契约和 Bukkit/Paper 示例见 [`chest_shop_edit/README.md`](../src/screens/chest_shop_edit/README.md) 与 [`chest_shop_buy/README.md`](../src/screens/chest_shop_buy/README.md)。
+
+---
+
+## 5. 九大界面汇总与组件复用对照
 
 | 界面 ID | 行数 | 核心复用组件 | 关键槽位分配 |
 |---|---|---|---|
@@ -52,3 +73,5 @@
 | `mount` (皇家坐骑) | 5 行 (45格) | `CompanionTemplate` (100%复用) | 复用宠物模板，差异项：显示移速、按钮改为「骑乘/设为默认」、槽位 `26` 外观形态切换 |
 | `mail` (信使邮箱) | 5 行 (45格) | `PagerSlot`, `Slot` | `0-3` 系统/玩家/CDK/发件 Tab(带未读红点), `19-22` CDK 四状态测试, `21-24` 发件附件槽, `41-44` 批量与单封操作 |
 | `guild` (荣耀公会) | 5 行 (45格) | `ReusableWarehouseGrid` + 权限矩阵 | 未入会列表/搜索/创建；已入会 `0-6` 七大子页面，公会仓库直接复用 `ReusableWarehouseGrid` 并受权限矩阵控制 |
+| `shop_edit` (箱子商店管理) | 6 行 (54格) | `GuiFrame`, `Slot`, `PlayerInventory` | `2/3/4` 货币, `11~25` 调价与输入, `28~34` 存取/下架, `P0-P35` 上架与补货 |
+| `shop_buy` (箱子商店购买) | 6 行 (54格) | `GuiFrame`, `Slot`, `PlayerInventory` | `13` 商品, `18~26` 数量, `31` 购买, `33` 背包容量, `P0-P35` 购买后存放 |

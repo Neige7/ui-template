@@ -8,7 +8,7 @@
   - `items`：居中在售商品模型、数量调整微调按钮、购买确认按钮。
 - **核心业务铁律**：
   - **展示透明**：清晰展示在售商品的货币类型（金币/点券/绿宝石）、单件售价、剩余库存。
-  - **数量约束**：玩家可用 `+` / `-` 调节数量，也可直接点击输入；**购买数量绝对禁止超过背包内物品上限**（以及商店库存与余额上限）。
+  - **数量约束**：玩家可用 `+` / `-` 调节数量，也可直接点击输入；拟购数量绝对禁止超过背包内物品上限或商店库存，确认购买时再校验余额。
   - **实时背包展示**：玩家可在界面下方实时观察到自己的 36 格行囊，购买完成后商品自动堆叠或落入空闲格子。
 
 ---
@@ -25,8 +25,8 @@
 | **19** | `button` | `minus_qty` | -10 件 | `{ action: 'shop_buy_adjust_qty', delta: -10 }` | 减少 10 件拟购数量 |
 | **20** | `button` | `minus_qty` | -1 件 | `{ action: 'shop_buy_adjust_qty', delta: -1 }` | 减少 1 件拟购数量 |
 | **21** | `button` | `cross_red` | MIN (归一) | `{ action: 'shop_buy_adjust_qty', delta: 'min' }` | 重置为购买 1 件 |
-| **22** | `button` | `book` / `price_tag` | **拟购数量与输入** | `{ action: 'shop_buy_qty_input' }` | 铁砧输入自定义数字，自动截断超出背包空间部分 |
-| **23** | `button` | `check_green` | MAX (最大) | `{ action: 'shop_buy_adjust_qty', delta: 'max' }` | 取 `min(库存, 背包上限, 余额可购)` |
+| **22** | `button` | `book` / `price_tag` | **拟购数量与输入** | `{ action: 'shop_buy_qty_input' }` | 铁砧输入自定义数字，自动截断超出背包空间或库存的部分 |
+| **23** | `button` | `check_green` | MAX (最大) | `{ action: 'shop_buy_adjust_qty', delta: 'max' }` | 取 `min(库存, 背包上限)`；确认购买时校验余额 |
 | **24** | `button` | `plus_qty` | +1 件 | `{ action: 'shop_buy_adjust_qty', delta: 1 }` | 增加 1 件 (受背包空间拦截) |
 | **25** | `button` | `plus_qty` | +10 件 | `{ action: 'shop_buy_adjust_qty', delta: 10 }` | 增加 10 件 (受背包空间拦截) |
 | **26** | `button` | `plus_qty` | +64 件 | `{ action: 'shop_buy_adjust_qty', delta: 64 }` | 增加 64 件 (受背包空间拦截) |
