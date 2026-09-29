@@ -13,7 +13,7 @@
 4. [项目目录组织与职责规范](#4-项目目录组织与职责规范)
 5. [核心组件库技术规范 (src/core)](#5-核心组件库技术规范-srccore)
 6. [九大界面规格与状态机详析](#6-九大界面规格与状态机详析)
-7. [研发阶段现状基线 (P0~P8) 与验收准则](#7-研发阶段现状基线-p0p8-与验收准则)
+7. [研发阶段现状基线 (P0~P9) 与验收准则](#7-研发阶段现状基线-p0p9-与验收准则)
 8. [Agent 标准开发流程 (SOP) 与操作规程](#8-agent-标准开发流程-sop-与操作规程)
 9. [Agent 研发十诫 (禁忌与军规清单)](#9-agent-研发十诫-禁忌与军规清单)
 10. [Minecraft 服务端 / 模组客户端移植工程指南](#10-minecraft-服务端--模组客户端移植工程指南)
@@ -28,7 +28,7 @@
 我们使用纯前端技术（Vite + React + TypeScript + 原生 CSS 变量），构建包含 **9 个标准界面**（玩家背包 Hub、任务视图、灵宠界面、坐骑界面、荣耀公会、信使邮箱、玩家仓库、箱子商店管理、箱子商店购买）的原型。
 
 其终极价值是**能够被插件开发者与模组客户端开发者无缝拆分移植**：
-- 导出为客户端资源包贴图切片 (`assets/.../textures/gui/`)
+- 通过 `src/export/` 从同一套像素代码生成客户端资源包贴图切片 (`assets/.../textures/gui/`)，并可打包为按界面或全量 ZIP
 - 导出为容器 GUI 槽位布局配置 (`layout.json` 对应服务端容器槽位映射)
 - 导出为服务端交互事件处理逻辑 (`GuiAction` 对应 Bukkit/Paper `InventoryClickEvent`)
 
@@ -41,7 +41,7 @@
 ### 1.3 非目标边界 (Out of Scope - 严禁擅自扩大范围)
 - ❌ **不做真实后端**：严禁接入真实数据库、HTTP 接口或 WebSocket 通信，全量业务必须由纯纯函数 `mockServer` 模拟；
 - ❌ **不做原生 Java 插件编写**：本项目只负责 Web 前端原型与跨端移植契约，不直接打包 `.jar`；
-- ❌ **不使用 Mojang 原版贴图**：严禁从原版客户端提取并上传带有 Mojang 知识产权的 PNG 贴图；所有图标必须采用项目中已内置的 SVG / 纯 CSS 矢量像素图标；
+- ❌ **不使用 Mojang 原版贴图**：严禁从原版客户端提取并上传带有 Mojang 知识产权的 PNG 贴图；所有图标必须采用项目中已内置的 SVG / 纯 CSS / Canvas 像素代码，导出的 PNG 只能是这些源码生成的派生文件；
 - ❌ **不做移动端手势适配**：MC 属于桌面游戏，本原型仅面向桌面端浏览器（1280px 以上视口，支持鼠标左键、右键、Shift 点击、数字键交换）。
 
 ---
@@ -155,6 +155,16 @@ ui-template/
     │   ├── TextInputModal.tsx   # 文本输入弹窗 (标注 anvil / sign / chat 来源)
     │   ├── CursorItem.tsx       # 鼠标手持抓取物品跟随层
     │   └── GuiContext.tsx       # 交互派发器与 Tooltip 全局 Context
+    ├── export/                  # 游戏美术资产生成与导出 (不读取外部图片)
+    │   ├── types.ts             # GuiAsset、AtlasData、ExportOptions 等导出协议
+    │   ├── assetRegistry.ts     # 按界面组装背景、槽位、按钮、图标等资产
+    │   ├── pixelIconData.ts     # 16×16 原创像素图标的 Canvas 数据源
+    │   ├── canvasDrawers.ts     # 像素 Canvas 绘制器与实时界面快照
+    │   ├── atlasPacker.ts       # SpriteSheet 图集与 atlas.json 坐标生成
+    │   ├── engineTemplates.ts   # Minecraft、TrMenu、Unity、Godot 接入模板
+    │   ├── zipExporter.ts       # 单图、当前界面 ZIP、全量 Master ZIP 导出
+    │   ├── GuiAssetExportStudio.tsx # 全屏资产检查、图集、九宫格与模板工坊
+    │   └── QuickExportDrawer.tsx    # 右侧抽屉中的快速 PNG / ZIP 导出
     ├── screens/                 # 9 大业务界面目录 (高内聚、自包含)
     │   ├── warehouse/           # 6.7 玩家仓库
     │   ├── inventory/           # 6.1 背包修改版 Hub
@@ -204,6 +214,16 @@ ui-template/
 ### 5.4 `ProgressBar.tsx`
 - **设计原理**：MC 容器槽位网格无法直接放置连续进度条，因此进度条必须标注为 `background` 与 `dynamic_text` 层，跨越连续的槽位绘制（如槽位 `38~42` 跨 5 格）；
 - **视觉特征**：凹槽黑色底板，内嵌带斜切高光的像素进度填充条，并在中央清晰标注进度文字（如 `1,420 / 3,000`）。
+
+### 5.5 游戏美术资产导出规范 (`src/export`)
+- **唯一数据源**：`GuiAsset.render(scale, transparent)` 必须从项目内置的 Canvas / 像素矩形数据绘制；禁止读取外部图片或把导出的 PNG 当作源码继续编辑。
+- **资产分类**：`background`（176px 容器背景与实时快照）、`slot`（18×18 槽位与装备底槽）、`button`、`bar`、`dialog`、`icon`，以及由这些资产派生的 `atlas` 图集。
+- **基础尺寸**：普通 5 行容器背景为 `176×195px`，商店 6 行容器背景为 `176×213px`；标准槽位 `18×18px`、图标 `16×16px`、进度条 `90×10px`、确认弹窗 `176×90px`。所有尺寸均以 1x 原始像素计。
+- **缩放与透明度**：导出工坊支持 `1x / 2x / 3x / 4x / 8x`；透明模式输出 Alpha PNG，非透明模式使用暗夜岩板背景。像素资产必须保持整数倍放大与 `pixelated` 渲染。
+- **单图与图集**：单个资产命名为 `<asset.id>_x<scale>.png`；Atlas 使用 2px 间距并同时输出 `atlas.png` 与 `atlas.json`，JSON 必须包含 `frame`、`sourceSize` 和可选 `nineSlice` 边距。
+- **九宫格边距**：`gui_frame_9slice` 为 `5px`，`slot_9slice` 为 `2px`，`btn_rpg` 为 `3px`，`tooltip_frame` 为 `4px`；修改绘制尺寸时必须同步检查导出的 `nine_slice_specs.json` 与引擎模板。
+- **ZIP 交付**：当前界面包必须包含分类 PNG、`spritesheet/atlas.png`、`spritesheet/atlas.json`、`nine_slice/nine_slice_specs.json`、对应 `layout.json`、`README_GAME_DEVELOPMENT.md` 和引擎模板；全量包必须覆盖 9 个界面及完整像素图标库。
+- **引擎模板边界**：导出包提供 Minecraft `pack.mcmeta`、TrMenu 配置、Unity 9-Slice 元数据与 `MCGuiSlot.cs`、Godot `NinePatchRect` 示例；这些文件是接入起点，服务端权限、槽位事件和资源命名仍须按目标项目复核。
 
 ---
 
@@ -277,7 +297,7 @@ ui-template/
 
 ---
 
-## 7. 研发阶段现状基线 (P0~P8) 与验收准则
+## 7. 研发阶段现状基线 (P0~P9) 与验收准则
 
 | 阶段 | 内容定位 | 交付物清单 | 状态 | 验收自检基线 |
 |---|---|---|---|---|
@@ -290,6 +310,7 @@ ui-template/
 | **P6** | 公会与权限矩阵 | `GuildScreen`、`permissionMatrix.ts`、README | **✔ 100% 达成** | 7 大子页面、公会仓库复用、职位实时模拟、人事与存取权限鉴权 |
 | **P7** | 导出打磨与测试 | `docs/porting-guide.md`、`TestRunnerModal` (10项全绿) | **✔ 100% 达成** | 单元测试 100% 通过；导出 JSON 规范；三层渲染解耦 |
 | **P8** | 箱子商店 | `ChestShopEditScreen`、`ChestShopBuyScreen`、`ChestShopState`、两个 `layout.json` 与 README | **✔ 100% 达成** | 单品上架、超大库存、多货币切换、背包容量/库存/余额三重购买校验 |
+| **P9** | 游戏图片资产导出 | `src/export/` 资产注册、Canvas 绘制、Atlas 打包、ZIP 导出、引擎模板 | **✔ 100% 达成** | 单组件 PNG、当前界面 ZIP、9 界面全量 ZIP、atlas 坐标字典、九宫格参数与多引擎模板均可生成 |
 
 ---
 
@@ -313,7 +334,7 @@ ui-template/
 [步骤 7: 扩充与运行单元测试]
   └─ 在 src/dev/TestRunnerModal.tsx 中补充该功能的自动化测试用例，确保全部通过。
 [步骤 8: 更新 README.md 并执行构建自检]
-  └─ 补充槽位表与 MC 实现说明，运行 npx tsc --noEmit 与 npm run build 确保零错误。
+  └─ 补充槽位表与 MC 实现说明；若界面视觉或尺寸有变，核对 src/export/assetRegistry.ts、nineSlice 参数与导出模板；运行 npx tsc --noEmit 与 npm run build 确保零错误。
 ```
 
 ---
@@ -422,6 +443,8 @@ public class WarehouseScreen extends AbstractContainerScreen<WarehouseMenu> {
 | **切换像素缩放系数** | 点击左侧 `--gui-scale` (2x / 3x / 4x) | 全界面整齐等比像素缩放，无模糊，网格严密对齐 |
 | **开启槽位调试网格** | 勾选「网格对齐辅助与槽位索引 (DebugOverlay)」 | 每个槽位中央精确叠加显示槽位编号（按界面显示 `0~44` 或 `0~53`，以及 `P0~P35`） |
 | **导出布局配置** | 打开右侧抽屉「槽位布局 JSON」点击「⬇ 导出 JSON」 | 立即下载该界面的标准化 `layout.json` |
+| **快速导出图片 / ZIP** | 右侧「🎮 导出」抽屉，或舞台上方「📸 截图」「📦 打包 ZIP」 | 下载当前界面的 PNG 快照或组件 ZIP |
+| **完整资产工坊** | 点击「🎮 导出 GUI 组件切片工坊」 | 检查组件分类、Atlas、9-Slice 与引擎模板，并导出当前界面或 9 界面总包 |
 
 ---
 > **签署说明**：本规范自制定之日起生效。所有后续 AI Agent 在修改或新增代码前，应以此文件作为唯一行为准则。

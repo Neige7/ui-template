@@ -932,7 +932,7 @@ export const Gallery: React.FC = () => {
               </div>
             )}
 
-            {/* Tab 5: P0~P7 阶段验收报告与移植指南汇总 */}
+            {/* Tab 5: P0~P9 阶段验收报告与移植指南汇总 */}
             {rightTab === 'porting_report' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div
@@ -943,7 +943,7 @@ export const Gallery: React.FC = () => {
                   }}
                 >
                   <div style={{ color: '#55ff55', fontWeight: 700, marginBottom: '4px' }}>
-                    ✔ P0 ~ P7 全阶段交付与移植验收报告
+                    ✔ P0 ~ P9 全阶段交付与移植验收报告
                   </div>
                   <div style={{ fontSize: '11px', color: '#9aa2c2' }}>
                     完整指南已输出至 <code>docs/porting-guide.md</code>

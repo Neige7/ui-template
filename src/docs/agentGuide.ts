@@ -65,11 +65,18 @@ export const AGENT_DEVELOPMENT_STEPS = [
   { step: '步骤 5: 编写或更新 Screen 组件', desc: '仅通过 dispatchAction 发送 GuiAction，读取 serverState 渲染视图，支持 6 大视觉状态。' },
   { step: '步骤 6: 编写 4 种典型 Mock 场景', desc: '在 scenarios.ts 中注入：1.正常状态；2.空数据状态；3.多页满载状态；4.边界异常状态。' },
   { step: '步骤 7: 扩充与运行单元测试', desc: '在 src/dev/TestRunnerModal.tsx 中补充该功能的自动化测试用例，确保全部通过。' },
-  { step: '步骤 8: 更新 README.md 并执行构建自检', desc: '补充槽位表与 MC 实现说明，运行 npx tsc --noEmit 与 npm run build 确保零错误。' },
+  { step: '步骤 8: 更新 README.md、导出契约并执行构建自检', desc: '补充槽位表与 MC 实现说明；视觉或尺寸变更时同步核对 src/export/assetRegistry.ts、九宫格边距与引擎模板，运行 npx tsc --noEmit 与 npm run build 确保零错误。' },
 ];
 
 export const AGENT_THREE_ARTIFACTS = [
   { name: '1. 可交互 Web 原型组件', path: 'src/screens/{name}/{Name}Screen.tsx', desc: '具备完整 6 大视觉状态，严格以 dispatchAction 发送 GuiAction，无缝支持桌面键鼠操作。' },
   { name: '2. 槽位布局配置文件', path: 'src/screens/{name}/layout.json', desc: '声明 rows、slots（按 rows 为 0~44 或 0~53，另含 P0~P35）、layers (background, dynamic_text, items)、mcInputSource 等。' },
   { name: '3. 交互与移植说明文档', path: 'src/screens/{name}/README.md', desc: '向服务端/模组开发者详细说明槽位动作映射、边界拦截、二次确认、以及 Java 移植范例代码。' },
+];
+
+export const AGENT_EXPORT_CHECKLIST = [
+  '资产必须由 src/export/ 的 Canvas 绘制器和内置像素数据生成，不得读取外部图片。',
+  '导出倍率只允许 1x / 2x / 3x / 4x / 8x；保持整数倍像素渲染与可选 Alpha 背景。',
+  'Atlas 必须同时提供 atlas.png、atlas.json，以及适用资产的 nineSlice 边距。',
+  '修改组件尺寸或界面行数后，必须检查单图 PNG、当前界面 ZIP 和 9 界面全量 ZIP 的目录与文件名。',
 ];

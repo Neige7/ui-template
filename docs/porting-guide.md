@@ -15,7 +15,7 @@
    - 没有任何前端 UI 组件直接修改业务状态。
    - 所有交互统一封装为 `GuiAction { screen, slot, click, payload }` 发送给 `mockServer.handle(state, action)`。
    - **移植到 Bukkit/Paper/Spigot 插件时**：监听 `InventoryClickEvent`，读取 `event.getRawSlot()` 与 `event.getClick()`，直接映射为对应的 `action` 处理函数，随后调用 `player.updateInventory()`。
-   - **移植到 Forge/Fabric/NeoForge 模组客户端时**：继承 `AbstractContainerScreen<T>`，复用各界面的 `layout.json` 坐标定义，将 `background` 层绑定为资源包 PNG 贴图，`dynamic_text` 层绑定至 `GuiGraphics.drawString()`。
+   - **移植到 Forge/Fabric/NeoForge 模组客户端时**：继承 `AbstractContainerScreen<T>`，复用各界面的 `layout.json` 坐标定义，将 `background` 层绑定为 `src/export/` 生成的资源包 PNG 贴图，`dynamic_text` 层绑定至 `GuiGraphics.drawString()`。
 
 ---
 
@@ -62,7 +62,58 @@ buyQty * shop.unitPrice <= getPlayerCurrencyBalance(player, shop.currency)
 
 ---
 
-## 5. 九大界面汇总与组件复用对照
+## 5. 游戏美术资产导出契约 (`src/export`)
+
+### 5.1 资产来源与类别
+
+导出模块从 `pixelIconData.ts` 和 Canvas 绘制器生成 PNG，项目不读取或上传外部图片。`buildGuiAssets(screenId, serverState?)` 会按界面组装以下资产：
+
+| 类别 | 内容 | 1x 基准尺寸 |
+|---|---|---|
+| `background` | 纯净容器背景、带当前物品与数量的实时快照、48×48 容器九宫格外框 | 普通界面 `176×195px`；商店 `176×213px`；外框 `48×48px` |
+| `slot` | 普通 / 悬停 / 选中 / 锁定 / 禁用槽位、装备底槽、槽位九宫格 | `18×18px`；槽位九宫格 `24×24px` |
+| `button` | RPG 按钮、Tab、翻页、整理、搜索、数量和购买按钮 | RPG 按钮 `64×18px`；Tab `32×18px`；图标按钮 `18×18px` |
+| `bar` | 空轨道及生命、容量、经验、预警、危险、公会金色进度条 | `90×10px` |
+| `dialog` | 二次确认弹窗、MC 风格 Tooltip 九宫格 | `176×90px`；Tooltip `32×32px` |
+| `icon` | 当前界面物品图标与全量原创像素图标库 | `16×16px` |
+
+所有尺寸均为原始像素；导出倍率只能使用 `1x / 2x / 3x / 4x / 8x`。透明模式输出 Alpha PNG，关闭透明背景时使用绘制器定义的暗色底；不得把生成 PNG 当成新的素材源。
+
+### 5.2 单图、实时快照与快速入口
+
+- 导出工坊 (`GuiAssetExportStudio`) 支持按 9 个界面切换、按类别和名称 / ID / 标签筛选、预览并单独下载 PNG，文件名为 `<asset.id>_x<scale>.png`。
+- 每个组件都可以复制 PNG Base64 Data URL；实时快照只有在传入 `ServerState` 时生成，包含当前界面物品、堆叠数字和标题。
+- Gallery 右侧「导出」抽屉提供当前界面的快速 PNG / ZIP；舞台上的「截图」按钮只保存当前渲染快照，不替代资源组件导出。
+
+### 5.3 Atlas 与九宫格
+
+`packAssetsToAtlas` 使用 2px 间距的货架式装箱算法，按渲染后的高度排序，图集宽度按总面积选择 `256 / 512 / 1024 / 2048px`，高度至少为 `128px`。`atlas.json` 的 `meta` 必须记录 `scale`、图集尺寸和 `RGBA8888` 格式；每个 `frames` 项必须记录 `frame`、原始 `sourceSize`，并在适用时记录 `nineSlice`。
+
+九宫格边距由资产注册表统一提供：`gui_frame_9slice` 为 `5px`，`slot_9slice` 为 `2px`，`btn_rpg` 为 `3px`，`tooltip_frame` 为 `4px`。导出包另写入 `nine_slice/nine_slice_specs.json`，Unity / Godot 接入时以该文件为准。
+
+### 5.4 ZIP 交付结构与引擎模板
+
+当前界面导出文件名为 `mc_gui_<screen>_assets_x<scale>.zip`，根目录包含：
+
+```text
+mc_gui_<screen>_assets/
+├── backgrounds/       # 纯净背景与有状态快照
+├── nine_slice/        # 九宫格 PNG 与 nine_slice_specs.json
+├── slots/             # 槽位状态与装备底槽
+├── buttons/           # 按钮、Tab、功能控件
+├── progress_bars/     # 进度条变体
+├── items/             # 当前界面 16×16 图标
+├── spritesheet/       # atlas.png + atlas.json
+├── engine_templates/  # pack.mcmeta、TrMenu、Unity、Godot 模板
+├── <screen>.layout.json
+└── README_GAME_DEVELOPMENT.md
+```
+
+全量导出文件名为 `mc_rpg_master_assets_all9_x<scale>.zip`，包含 `gui_<screen>/` 下的 9 个界面资源、`full_pixel_icon_library/` 全量像素图标库和 `README_MASTER_BUNDLE.md`。引擎模板只是接入起点：目标项目仍需按服务端权限、槽位事件和实际资源命名复核 `pack.mcmeta`、TrMenu、Unity `MCGuiSlot.cs` 与 Godot `NinePatchRect` 配置。
+
+---
+
+## 6. 九大界面汇总与组件复用对照
 
 | 界面 ID | 行数 | 核心复用组件 | 关键槽位分配 |
 |---|---|---|---|

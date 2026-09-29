@@ -182,6 +182,11 @@ export const STAGE_REPORTS = [
     status: '✔ 已完成',
     deliverables: 'ChestShopEditScreen、ChestShopBuyScreen、ChestShopState、6 行容器布局与 README；单品上架、超大库存、多货币结算和购买容量校验',
   },
+  {
+    stage: 'P9 游戏图片资产导出',
+    status: '✔ 已完成',
+    deliverables: 'src/export/ 资产注册与 Canvas 绘制、单图 PNG、Atlas + atlas.json、九宫格参数、当前界面 ZIP、9 界面全量 ZIP，以及 Minecraft / TrMenu / Unity / Godot 接入模板',
+  },
 ];
 
 export const CONFIRMED_ASSUMPTIONS = [
