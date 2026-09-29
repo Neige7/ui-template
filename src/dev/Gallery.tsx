@@ -32,6 +32,10 @@ import { ActionLogEntry, GuiAction, ScreenId, ServerState } from '../types';
 import { DebugOverlayBanner } from './DebugOverlay';
 import { runCoreUnitTests, TestRunnerModal } from './TestRunnerModal';
 import { AgentGuideModal } from './AgentGuideModal';
+import { GuiAssetExportStudio } from '../export/GuiAssetExportStudio';
+import { QuickExportDrawer } from '../export/QuickExportDrawer';
+import { renderLiveGuiSnapshot } from '../export/canvasDrawers';
+import { exportCurrentScreenZip } from '../export/zipExporter';
 import {
   AGENT_TEN_COMMANDMENTS,
   AGENT_DEVELOPMENT_STEPS,
@@ -71,10 +75,26 @@ export const Gallery: React.FC = () => {
     },
   ]);
   const [rightTab, setRightTab] = useState<
-    'readme' | 'layout_json' | 'action_log' | 'porting_report' | 'agent_md'
-  >('readme');
+    'readme' | 'layout_json' | 'action_log' | 'porting_report' | 'agent_md' | 'export'
+  >('export');
   const [testModalOpen, setTestModalOpen] = useState(false);
   const [agentGuideModalOpen, setAgentGuideModalOpen] = useState(false);
+  const [exportStudioOpen, setExportStudioOpen] = useState(false);
+
+  const handleQuickDownloadSnapshot = () => {
+    const canvas = renderLiveGuiSnapshot(serverState.currentScreen, serverState, guiScale);
+    const url = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `mc_gui_${serverState.currentScreen}_snapshot_x${guiScale}.png`;
+    a.click();
+  };
+
+  const handleQuickExportZip = async () => {
+    await exportCurrentScreenZip(serverState.currentScreen, serverState, {
+      scale: guiScale,
+    });
+  };
 
   const unitTests = runCoreUnitTests();
   const allPassed = unitTests.every((t) => t.passed);
@@ -382,11 +402,99 @@ export const Gallery: React.FC = () => {
                 研发宪章
               </span>
             </button>
+
+            <button
+              type="button"
+              className="wb-btn active"
+              style={{
+                width: '100%',
+                justifyContent: 'space-between',
+                borderColor: '#ffd369',
+                color: '#ffd369',
+                background: 'linear-gradient(135deg, #2b2313 0%, #1c1d29 100%)',
+                boxShadow: '0 0 12px rgba(255, 211, 105, 0.2)',
+                fontWeight: 700,
+                marginTop: '4px',
+              }}
+              onClick={() => setExportStudioOpen(true)}
+            >
+              <span>🎮 导出 GUI 组件切片工坊</span>
+              <span className="wb-badge" style={{ color: '#ffd369', borderColor: '#ffd369' }}>
+                EXPORT
+              </span>
+            </button>
           </div>
         </aside>
 
         {/* ==================== 中央：可交互 Minecraft 容器 GUI 舞台 ==================== */}
         <main className="workbench-stage">
+          {/* 快捷游戏组件切片导出操作条 */}
+          <div
+            style={{
+              width: 'var(--gui-width)',
+              marginBottom: '6px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <button
+              type="button"
+              className="wb-btn active"
+              style={{
+                flex: 1,
+                padding: '6px 12px',
+                backgroundColor: '#1b3f26',
+                borderColor: '#399e52',
+                color: '#ffd369',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+                fontSize: '11.5px',
+              }}
+              onClick={() => setExportStudioOpen(true)}
+            >
+              <span>🎮 导出对应 GUI 组件图片 (游戏专用)</span>
+            </button>
+            <button
+              type="button"
+              className="wb-btn"
+              style={{
+                padding: '6px 10px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+                fontSize: '11px',
+              }}
+              onClick={handleQuickDownloadSnapshot}
+              title="快速截图保存当前渲染 GUI 为 PNG 图片"
+            >
+              <span>📸 截图</span>
+            </button>
+            <button
+              type="button"
+              className="wb-btn"
+              style={{
+                padding: '6px 10px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+                fontSize: '11px',
+              }}
+              onClick={handleQuickExportZip}
+              title="快速打包当前 GUI 所有贴图组件为 ZIP 压缩包"
+            >
+              <span>📦 打包 ZIP</span>
+            </button>
+          </div>
+
           {/* 顶部操作提示与实时 Toast 通知栏 */}
           <div
             style={{
@@ -452,11 +560,19 @@ export const Gallery: React.FC = () => {
               padding: '8px 10px',
               borderBottom: '1px solid #262b40',
               display: 'grid',
-              gridTemplateColumns: 'repeat(5, 1fr)',
+              gridTemplateColumns: 'repeat(6, 1fr)',
               gap: '3px',
               background: '#161926',
             }}
           >
+            <button
+              type="button"
+              className={`wb-btn ${rightTab === 'export' ? 'active' : ''}`}
+              style={{ padding: '5px 2px', fontSize: '10px', color: '#55ff55' }}
+              onClick={() => setRightTab('export')}
+            >
+              🎮 导出
+            </button>
             <button
               type="button"
               className={`wb-btn ${rightTab === 'readme' ? 'active' : ''}`}
@@ -509,6 +625,15 @@ export const Gallery: React.FC = () => {
               lineHeight: 1.55,
             }}
           >
+            {/* Tab 0: 游戏 GUI 组件与切片导出管理 */}
+            {rightTab === 'export' && (
+              <QuickExportDrawer
+                currentScreen={activeScreen}
+                serverState={serverState}
+                onOpenStudio={() => setExportStudioOpen(true)}
+              />
+            )}
+
             {/* Tab 1: 当前界面的交互说明文档 (README.md) */}
             {rightTab === 'readme' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -866,6 +991,18 @@ export const Gallery: React.FC = () => {
         open={testModalOpen}
         onClose={() => setTestModalOpen(false)}
       />
+      <AgentGuideModal
+        open={agentGuideModalOpen}
+        onClose={() => setAgentGuideModalOpen(false)}
+      />
+      {exportStudioOpen && (
+        <GuiAssetExportStudio
+          currentScreen={activeScreen}
+          serverState={serverState}
+          onClose={() => setExportStudioOpen(false)}
+          onSelectScreen={handleScreenSelect}
+        />
+      )}
     </GuiContext.Provider>
   );
 };
