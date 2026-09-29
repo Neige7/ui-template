@@ -1,0 +1,36 @@
+{
+  "screen": "pet",
+  "rows": 5,
+  "title": "§8[§d灵宠契约法阵§8]",
+  "clientMode": "mod_client_and_container_hybrid",
+  "slots": {
+    "0": { "type": "display", "label": "当前出战灵宠汇总状态槽 (同时限 1 只出战)" },
+    "7": { "type": "button", "action": "toggle_equip_slot_count", "label": "切换装备槽数量 (默认 1 格 / 可选 3 格)" },
+    "8": { "type": "button", "action": "nav_screen:inventory", "label": "返回角色行囊(Hub)" },
+    "9-12": { "type": "list_item", "label": "宠物分页列表 (第 1 行)" },
+    "18-21": { "type": "list_item", "label": "宠物分页列表 (第 2 行)" },
+    "14": { "type": "display", "label": "选中灵宠详情槽 (名称、等级、属性加成)" },
+    "15-17": { "type": "progress_bar", "action": "pet_exp_bar", "label": "灵宠升级经验进度条 (跨 3 格)" },
+    "23": { "type": "equipment", "equipType": "pet_collar", "label": "宠物专属装备槽 #1 (默认开启)" },
+    "24-25": {
+      "type": "equipment",
+      "equipType": "pet_claw",
+      "visibleWhen": "equipSlotCount === 3",
+      "label": "扩展宠物装备槽 #2-#3"
+    },
+    "36": { "type": "pager", "action": "page_prev", "label": "上一页" },
+    "37": { "type": "pager", "action": "page_info", "label": "页码 (x/y)" },
+    "38": { "type": "pager", "action": "page_next", "label": "下一页" },
+    "41": { "type": "button", "action": "companion_toggle_active", "label": "出战 / 收回 (同时只能出战 1 只)" },
+    "42": { "type": "button", "action": "companion_feed", "label": "喂养升级 (消耗灵宠果露)" },
+    "43": {
+      "type": "button",
+      "action": "companion_rename",
+      "mcInputSource": "anvil",
+      "label": "灵宠改名"
+    },
+    "44": { "type": "button", "action": "companion_release", "label": "放生灵宠 (需二次确认)" },
+    "P0-P35": { "type": "storage", "label": "玩家背包 (可从中 Shift+左键或拖拽放入宠物专属装备)" }
+  },
+  "layers": ["background", "dynamic_text", "items"]
+}

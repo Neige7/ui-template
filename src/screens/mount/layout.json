@@ -1,0 +1,37 @@
+{
+  "screen": "mount",
+  "rows": 5,
+  "title": "§8[§b皇家坐骑兽栏§8]",
+  "clientMode": "mod_client_and_container_hybrid",
+  "slots": {
+    "0": { "type": "display", "label": "当前骑乘坐骑汇总状态槽" },
+    "7": { "type": "button", "action": "toggle_equip_slot_count", "label": "切换鞍具槽数量 (1 格 / 3 格)" },
+    "8": { "type": "button", "action": "nav_screen:inventory", "label": "返回角色行囊(Hub)" },
+    "9-12": { "type": "list_item", "label": "坐骑分页列表 (第 1 行)" },
+    "18-21": { "type": "list_item", "label": "坐骑分页列表 (第 2 行)" },
+    "14": { "type": "display", "label": "选中坐骑详情槽 (名称、等级、移动速度加成、属性)" },
+    "15-17": { "type": "progress_bar", "action": "mount_exp_bar", "label": "坐骑升级经验进度条 (跨 3 格)" },
+    "23": { "type": "equipment", "equipType": "mount_saddle", "label": "坐骑专属鞍具槽 #1" },
+    "24-25": {
+      "type": "equipment",
+      "equipType": "mount_barding",
+      "visibleWhen": "equipSlotCount === 3",
+      "label": "扩展坐骑装备槽 #2-#3"
+    },
+    "26": { "type": "button", "action": "mount_cycle_skin", "label": "坐骑外观形态选择 (差异项)" },
+    "36": { "type": "pager", "action": "page_prev", "label": "上一页" },
+    "37": { "type": "pager", "action": "page_info", "label": "页码 (x/y)" },
+    "38": { "type": "pager", "action": "page_next", "label": "下一页" },
+    "41": { "type": "button", "action": "companion_toggle_active", "label": "骑乘 / 设为默认" },
+    "42": { "type": "button", "action": "companion_feed", "label": "喂养草料升级" },
+    "43": {
+      "type": "button",
+      "action": "companion_rename",
+      "mcInputSource": "anvil",
+      "label": "坐骑改名"
+    },
+    "44": { "type": "button", "action": "companion_release", "label": "放生坐骑 (二次确认)" },
+    "P0-P35": { "type": "storage", "label": "玩家背包 (可从中放入坐骑专属鞍具)" }
+  },
+  "layers": ["background", "dynamic_text", "items"]
+}

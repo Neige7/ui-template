@@ -1,0 +1,442 @@
+:root {
+  --gui-scale: 3;
+  --px: calc(1px * var(--gui-scale));
+  --slot-size: calc(18px * var(--gui-scale));
+  --icon-size: calc(16px * var(--gui-scale));
+  --gui-width: calc(176px * var(--gui-scale));
+  --grid-width: calc(162px * var(--gui-scale)); /* 9 * 18px = 162px */
+  --grid-offset-x: calc(7px * var(--gui-scale)); /* (176 - 162) / 2 = 7px (MC 标准箱子左右边距) */
+
+  /* 奇幻简约 RPG 调色板 (Fantasy Minimalist RPG Palette) */
+  --rpg-bg-outer: #0d0f17;
+  --rpg-frame-bg: #252736;
+  --rpg-frame-surface: #313447;
+  --rpg-frame-border-light: #5c6282;
+  --rpg-frame-border-dark: #151722;
+  --rpg-gold-trim: #d4a64a;
+  --rpg-gold-shadow: #7a581c;
+
+  /* 槽位颜色 (MC Bevel Slot + Fantasy Slate) */
+  --slot-bg: #1e202d;
+  --slot-bg-hover: #383e56;
+  --slot-bg-selected: #2d3b55;
+  --slot-bg-disabled: #15161f;
+  --slot-bg-locked: #191520;
+  --slot-border-top: #10121a;
+  --slot-border-left: #10121a;
+  --slot-border-right: #494e6b;
+  --slot-border-bottom: #494e6b;
+
+  /* 稀有度色彩 */
+  --rarity-common: #9ea4b0;
+  --rarity-uncommon: #55ff55;
+  --rarity-rare: #55ffff;
+  --rarity-epic: #aa00aa;
+  --rarity-legendary: #ffaa00;
+  --rarity-mythic: #ff5555;
+
+  /* 字体 */
+  --font-pixel: 'DotGothic16', 'Silkscreen', 'JetBrains Mono', monospace;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--rpg-bg-outer);
+  color: #e6e8f0;
+  font-family: var(--font-pixel);
+  image-rendering: pixelated;
+  overflow-x: hidden;
+}
+
+/* 像素化渲染约束 */
+.pixelated {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* ==================== 工作台整体布局 ==================== */
+.app-workbench {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 280px 1fr 370px;
+  background:
+    radial-gradient(circle at 50% 25%, rgba(82, 65, 135, 0.16), transparent 65%),
+    linear-gradient(180deg, #0e1018 0%, #090b10 100%);
+}
+
+@media (max-width: 1280px) {
+  .app-workbench {
+    grid-template-columns: 250px 1fr;
+  }
+  .workbench-right-drawer {
+    grid-column: 1 / -1;
+  }
+}
+
+/* 左侧导航与场景控制栏 */
+.workbench-sidebar {
+  background: #131622;
+  border-right: 2px solid #262b40;
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+  gap: 14px;
+  overflow-y: auto;
+}
+
+.brand-box {
+  padding: 10px 12px;
+  background: linear-gradient(135deg, #1d2133 0%, #151826 100%);
+  border: 2px solid #3c4363;
+  box-shadow: inset 0 0 0 1px #10121c;
+}
+
+.brand-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffd369;
+  letter-spacing: 0.5px;
+  margin: 0 0 4px 0;
+}
+
+.brand-subtitle {
+  font-size: 11px;
+  color: #9aa2c2;
+  margin: 0;
+  font-family: var(--font-mono);
+}
+
+/* 中央 GUI 舞台 */
+.workbench-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 18px 20px 36px;
+  overflow: auto;
+  position: relative;
+}
+
+/* 右侧开发交付检查器 */
+.workbench-right-drawer {
+  background: #131622;
+  border-left: 2px solid #262b40;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ==================== MC 容器外框 (GuiFrame 176px 标准宽度) ==================== */
+.mc-gui-frame {
+  width: var(--gui-width);
+  background-color: var(--rpg-frame-bg);
+  border-top: calc(2px * var(--gui-scale)) solid var(--rpg-frame-border-light);
+  border-left: calc(2px * var(--gui-scale)) solid var(--rpg-frame-border-light);
+  border-right: calc(2px * var(--gui-scale)) solid var(--rpg-frame-border-dark);
+  border-bottom: calc(2px * var(--gui-scale)) solid var(--rpg-frame-border-dark);
+  box-shadow:
+    0 0 0 calc(1px * var(--gui-scale)) #090a10,
+    0 14px 36px rgba(0, 0, 0, 0.75);
+  padding: calc(5px * var(--gui-scale));
+  position: relative;
+  transition: transform 0.1s ease;
+}
+
+/* 奇幻 RPG 金属包角装饰（背景贴图层 background layer） */
+.mc-gui-frame::before {
+  content: '';
+  position: absolute;
+  inset: calc(1px * var(--gui-scale));
+  border: calc(1px * var(--gui-scale)) solid rgba(212, 166, 74, 0.28);
+  pointer-events: none;
+}
+
+.mc-gui-header {
+  min-height: calc(12px * var(--gui-scale));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 calc(2px * var(--gui-scale)) calc(3px * var(--gui-scale));
+  font-size: calc(6px * var(--gui-scale));
+  line-height: 1.1;
+  color: #e2e6f5;
+  text-shadow: calc(1px * var(--gui-scale)) calc(1px * var(--gui-scale)) 0 #11131d;
+  position: relative;
+  z-index: 2;
+}
+
+/* 9列 × N行 标准 18x18px 槽位网格 */
+.mc-slot-grid {
+  width: var(--grid-width);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(9, var(--slot-size));
+  grid-auto-rows: var(--slot-size);
+  position: relative;
+  background-color: #191b26;
+}
+
+.mc-section-divider {
+  width: var(--grid-width);
+  margin: calc(3px * var(--gui-scale)) auto calc(2px * var(--gui-scale));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: calc(5px * var(--gui-scale));
+  color: #9ba3c4;
+}
+
+/* ==================== 单个 18x18px 槽位 (Slot) ==================== */
+.mc-slot {
+  width: var(--slot-size);
+  height: var(--slot-size);
+  background-color: var(--slot-bg);
+  border-top: var(--px) solid var(--slot-border-top);
+  border-left: var(--px) solid var(--slot-border-top);
+  border-right: var(--px) solid var(--slot-border-right);
+  border-bottom: var(--px) solid var(--slot-border-bottom);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.mc-slot.state-hover,
+.mc-slot:hover:not(.state-disabled):not(.state-locked):not(.state-hidden) {
+  background-color: var(--slot-bg-hover);
+}
+
+.mc-slot:hover:not(.state-disabled):not(.state-locked):not(.state-hidden)::after {
+  content: '';
+  position: absolute;
+  inset: var(--px);
+  background: rgba(255, 255, 255, 0.16);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.mc-slot.state-selected {
+  background-color: var(--slot-bg-selected);
+  box-shadow: inset 0 0 0 var(--px) #ffd369;
+}
+
+.mc-slot.state-disabled {
+  background-color: var(--slot-bg-disabled);
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+.mc-slot.state-locked {
+  background-color: var(--slot-bg-locked);
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 85, 85, 0.06) 0px,
+    rgba(255, 85, 85, 0.06) 4px,
+    transparent 4px,
+    transparent 8px
+  );
+  cursor: not-allowed;
+}
+
+.mc-slot.state-hidden {
+  background-color: #161822;
+  border-color: #202332;
+  cursor: default;
+}
+
+/* 16x16 居中物品图标容器 */
+.mc-item-icon-wrapper {
+  width: var(--icon-size);
+  height: var(--icon-size);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* 稀有度内边微光 */
+.rarity-frame-common {
+  box-shadow: inset 0 0 0 1px rgba(158, 164, 176, 0.25);
+}
+.rarity-frame-uncommon {
+  box-shadow: inset 0 0 0 var(--px) rgba(85, 255, 85, 0.45);
+}
+.rarity-frame-rare {
+  box-shadow: inset 0 0 0 var(--px) rgba(85, 255, 255, 0.55);
+}
+.rarity-frame-epic {
+  box-shadow: inset 0 0 0 var(--px) rgba(185, 65, 255, 0.65);
+}
+.rarity-frame-legendary {
+  box-shadow: inset 0 0 0 var(--px) rgba(255, 170, 0, 0.8);
+}
+.rarity-frame-mythic {
+  box-shadow: inset 0 0 0 var(--px) rgba(255, 85, 85, 0.85);
+}
+
+/* 物品右下角堆叠数量 */
+.mc-item-amount {
+  position: absolute;
+  right: calc(0.5px * var(--gui-scale));
+  bottom: 0;
+  font-size: calc(4.8px * var(--gui-scale));
+  line-height: 1;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow:
+    var(--px) var(--px) 0 #12131a,
+    calc(-1 * var(--px)) 0 0 #12131a,
+    0 calc(-1 * var(--px)) 0 #12131a;
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* 槽位左上角状态角标（如出战、未读红点、已追踪） */
+.mc-slot-badge {
+  position: absolute;
+  top: var(--px);
+  left: var(--px);
+  font-size: calc(3.8px * var(--gui-scale));
+  line-height: 1;
+  padding: 0 var(--px);
+  background: rgba(16, 0, 16, 0.85);
+  color: #ffd369;
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* 跨槽位绘制的动态文本层 / 进度条层 (ProgressBar / Overlay Banner) */
+.mc-spanning-bar {
+  position: absolute;
+  pointer-events: none;
+  z-index: 5;
+  display: flex;
+   flex-direction: column;
+  justify-content: center;
+  padding: 0 calc(2px * var(--gui-scale));
+}
+
+/* ==================== MC 深紫边框悬浮提示框 (Tooltip 3.4) ==================== */
+.mc-tooltip {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  background-color: rgba(16, 0, 16, 0.94);
+  border: 2px solid #2c0863;
+  box-shadow:
+    inset 0 0 0 2px #5000ff,
+    0 0 0 2px #100010,
+    0 8px 20px rgba(0, 0, 0, 0.85);
+  padding: 8px 10px;
+  min-width: 190px;
+  max-width: 340px;
+  font-family: var(--font-pixel);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.mc-tooltip-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  text-shadow: 1px 1px 0 #140014;
+}
+
+.mc-tooltip-lore-line {
+  font-size: 12.5px;
+  text-shadow: 1px 1px 0 #100010;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.mc-tooltip-warning {
+  margin-top: 6px;
+  padding: 3px 6px;
+  background: rgba(255, 85, 85, 0.16);
+  border: 1px solid #ff5555;
+  color: #ff9999;
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+/* ==================== DebugOverlay 网格与槽位索引层 ==================== */
+.mc-debug-slot-index {
+  position: absolute;
+  top: 1px;
+  left: 2px;
+  font-family: var(--font-mono);
+  font-size: calc(3.6px * var(--gui-scale));
+  font-weight: 700;
+  color: #00ffcc;
+  background: rgba(0, 18, 24, 0.82);
+  padding: 0 2px;
+  border-radius: 1px;
+  z-index: 8;
+  pointer-events: none;
+}
+
+.mc-debug-grid-active .mc-slot {
+  outline: 1px dashed rgba(0, 255, 204, 0.45);
+}
+
+.mc-debug-layer-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: rgba(255, 211, 105, 0.15);
+  border: 1px solid rgba(255, 211, 105, 0.5);
+  color: #ffd369;
+}
+
+/* ==================== 按钮与通用控件样式 ==================== */
+.wb-btn {
+  background: #23273a;
+  color: #dce1f5;
+  border: 1px solid #3f4666;
+  padding: 6px 10px;
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.12s ease;
+}
+
+.wb-btn:hover {
+  background: #2f3550;
+  border-color: #6a74a6;
+}
+
+.wb-btn.active {
+  background: #3a3154;
+  border-color: #d4a64a;
+  color: #ffd369;
+  box-shadow: inset 0 0 0 1px rgba(212, 166, 74, 0.35);
+}
+
+.wb-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 1px 5px;
+  background: #2a3047;
+  color: #a9b2d6;
+  border-radius: 2px;
+}

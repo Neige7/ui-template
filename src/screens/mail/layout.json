@@ -1,0 +1,26 @@
+{
+  "screen": "mail",
+  "rows": 5,
+  "title": "§8[§e信使猫头鹰驿站§8]",
+  "clientMode": "mod_client_and_container_hybrid",
+  "slots": {
+    "0": { "type": "tab", "action": "mail_tab:system", "label": "系统邮件 (带未读红点)" },
+    "1": { "type": "tab", "action": "mail_tab:player", "label": "玩家邮件 (带未读红点)" },
+    "2": { "type": "tab", "action": "mail_tab:cdk", "label": "CDK 礼包兑换" },
+    "3": { "type": "tab", "action": "mail_tab:send", "label": "发送邮件" },
+    "8": { "type": "button", "action": "nav_screen:inventory", "label": "返回角色行囊(Hub)" },
+    "9-13": { "type": "list_item", "label": "邮件列表区 / CDK 输入槽 / 发件字段槽" },
+    "18-22": { "type": "list_item", "label": "邮件列表区 / CDK 四种状态快捷测试槽" },
+    "15": { "type": "display", "label": "邮件正文详情 / CDK 兑换结果 / 邮费展示槽" },
+    "24-26": { "type": "attachment", "label": "邮件附件预览槽 / CDK 奖励展示槽" },
+    "36": { "type": "pager", "action": "page_prev", "label": "上一页" },
+    "37": { "type": "pager", "action": "page_info", "label": "页码 (x/y)" },
+    "38": { "type": "pager", "action": "page_next", "label": "下一页" },
+    "41": { "type": "button", "action": "mail_claim_all", "label": "批量操作：一键领取" },
+    "42": { "type": "button", "action": "mail_delete_read", "label": "批量操作：删除已读 (需二次确认)" },
+    "43": { "type": "button", "action": "mail_claim_single_or_send", "label": "领取当前邮件附件 / 确认发送邮件" },
+    "44": { "type": "button", "action": "mail_delete_single", "label": "删除当前邮件" },
+    "P0-P35": { "type": "storage", "label": "玩家背包 (用于收取附件或放入待寄送物品)" }
+  },
+  "layers": ["background", "dynamic_text", "items"]
+}

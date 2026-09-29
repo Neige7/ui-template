@@ -1,0 +1,45 @@
+{
+  "screen": "quest",
+  "rows": 5,
+  "title": "§8[§a冒险者委托日志§8]",
+  "clientMode": "mod_client_and_container_hybrid",
+  "slots": {
+    "0": { "type": "tab", "action": "quest_cat:main", "label": "主线史诗" },
+    "1": { "type": "tab", "action": "quest_cat:side", "label": "支线轶事" },
+    "2": { "type": "tab", "action": "quest_cat:daily", "label": "日常委托" },
+    "3": { "type": "tab", "action": "quest_cat:weekly", "label": "周常讨伐" },
+    "4": { "type": "tab", "action": "quest_cat:event", "label": "限时庆典" },
+    "8": { "type": "button", "action": "nav_screen:inventory", "label": "返回角色行囊(Hub)" },
+    "9-13": { "type": "list_item", "label": "当前分类任务分页列表 (第 1 行)" },
+    "18-22": { "type": "list_item", "label": "当前分类任务分页列表 (第 2 行)" },
+    "15": { "type": "display", "label": "选中任务卷宗详情 (Lore 展示完整描述与目标进度)" },
+    "24-26": { "type": "reward", "label": "任务完成奖励物品预览槽 (可悬停查看装备属性)" },
+    "36": { "type": "pager", "action": "page_prev", "label": "任务列表上一页" },
+    "37": { "type": "pager", "action": "page_info", "label": "第 x/y 页" },
+    "38": { "type": "pager", "action": "page_next", "label": "任务列表下一页" },
+    "41": {
+      "type": "button",
+      "action": "quest_track",
+      "visibleWhen": "selectedQuest.trackable && status === 'in_progress'",
+      "label": "计分板追踪/取消追踪"
+    },
+    "42": {
+      "type": "button",
+      "action": "quest_abandon",
+      "visibleWhen": "status === 'in_progress'",
+      "label": "放弃任务 (需二次确认)"
+    },
+    "43": {
+      "type": "button",
+      "action": "quest_accept_or_submit",
+      "visibleWhen": "status === 'available' || status === 'claimable'",
+      "label": "接取任务 / 提交领奖"
+    },
+    "P0-P35": { "type": "storage", "label": "玩家背包 (用于接收任务提交奖励)" }
+  },
+  "layers": ["background", "dynamic_text", "items"],
+  "notes": [
+    "顶部槽位 0-4 为五大任务分类 Tab，切换时自动将 currentPage 重置为 1",
+    "左侧槽位 (9-13, 18-22) 为每页最多 10 个任务列表项，右侧槽位 (15, 24-26, 41-43) 为选中任务详情、奖励预览与状态动作按钮"
+  ]
+}

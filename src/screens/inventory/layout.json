@@ -1,0 +1,36 @@
+{
+  "screen": "inventory",
+  "rows": 5,
+  "title": "§8[§6艾泽兰 RPG · 角色行囊§8]",
+  "clientMode": "mod_client_and_container_hybrid",
+  "slots": {
+    "0": { "type": "equipment", "equipType": "helmet", "label": "头部防具槽" },
+    "1": { "type": "equipment", "equipType": "necklace", "label": "RPG扩展 · 项链槽" },
+    "2-4": { "type": "display", "label": "角色纸娃娃预览区 (跨 3×3 槽位背景贴图/实体渲染层)" },
+    "5": { "type": "display", "label": "战斗力与核心属性汇总槽" },
+    "6": { "type": "hub_nav", "action": "nav_screen:quest", "label": "入口：任务委托" },
+    "7": { "type": "hub_nav", "action": "nav_screen:pet", "label": "入口：灵宠契约" },
+    "8": { "type": "hub_nav", "action": "nav_screen:mount", "label": "入口：皇家坐骑" },
+    "9": { "type": "equipment", "equipType": "chestplate", "label": "胸部防具槽" },
+    "10": { "type": "equipment", "equipType": "ring", "label": "RPG扩展 · 戒指槽 #1" },
+    "14": { "type": "display", "label": "出战灵宠加成预览" },
+    "15": { "type": "hub_nav", "action": "nav_screen:guild", "label": "入口：荣耀公会" },
+    "16": { "type": "hub_nav", "action": "nav_screen:mail", "label": "入口：信使邮箱 (带未读红点)" },
+    "17": { "type": "hub_nav", "action": "nav_screen:warehouse", "label": "入口：私人仓库" },
+    "18": { "type": "equipment", "equipType": "leggings", "label": "腿部防具槽" },
+    "19": { "type": "equipment", "equipType": "ring", "label": "RPG扩展 · 戒指槽 #2" },
+    "23": { "type": "display", "label": "骑乘坐骑加成预览" },
+    "27": { "type": "equipment", "equipType": "boots", "label": "脚部防具槽" },
+    "28": { "type": "equipment", "equipType": "talisman", "label": "RPG扩展 · 护符槽" },
+    "36": { "type": "equipment", "equipType": "offhand", "label": "副手盾牌/法器槽" },
+    "37-44": { "type": "display", "label": "角色综合属性面板与金币/晶石货币栏" },
+    "P0-P26": { "type": "storage", "label": "玩家主背包 (3×9 = 27格)" },
+    "P27-P35": { "type": "storage", "label": "玩家快捷栏 (1×9 = 9格)" }
+  },
+  "layers": ["background", "dynamic_text", "items"],
+  "notes": [
+    "第 0 列 (槽位 0,9,18,27,36) 为原版防具与副手槽",
+    "第 1 列 (槽位 1,10,19,28) 为 RPG 扩展首饰槽 (项链、戒指×2、护符)",
+    "右侧槽位 6,7,8,15,16,17 为通往其余 6 个系统的快捷 Hub 入口，其中邮箱自动计算未读数量并显示红点角标"
+  ]
+}

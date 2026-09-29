@@ -1,0 +1,45 @@
+{
+  "screen": "warehouse",
+  "rows": 5,
+  "title": "§8[§9星辰私人仓库§8]",
+  "clientMode": "mod_client_and_container_hybrid",
+  "slots": {
+    "0": { "type": "tab", "action": "category:all", "label": "全部物品" },
+    "1": { "type": "tab", "action": "category:equipment", "label": "武器装备" },
+    "2": { "type": "tab", "action": "category:material", "label": "锻造材料" },
+    "3": { "type": "tab", "action": "category:consumable", "label": "消耗药剂" },
+    "4": { "type": "tab", "action": "category:quest", "label": "任务信物" },
+    "5": { "type": "tab", "action": "category:other", "label": "杂项珍宝" },
+    "6": { "type": "button", "action": "nav_screen:inventory", "label": "返回角色行囊(Hub)" },
+    "7": { "type": "button", "action": "sort_warehouse", "label": "整理与品质排序" },
+    "8": {
+      "type": "button",
+      "action": "search_warehouse",
+      "label": "搜索物品 (右键清除)",
+      "mcInputSource": "anvil"
+    },
+    "9-35": { "type": "storage", "label": "仓库存储区 (3×9 = 27格/页)" },
+    "36": { "type": "pager", "action": "page_prev", "label": "上一页" },
+    "37": { "type": "pager", "action": "page_indicator_and_mode", "label": "页码指示 (x/y)" },
+    "38-42": {
+      "type": "progress_bar",
+      "action": "capacity_bar",
+      "label": "总量限制条 (当前堆叠总数 / 最大上限)"
+    },
+    "43": {
+      "type": "button",
+      "action": "unlock_next",
+      "visibleWhen": "unlockedCount < maxSlots && canUnlockPermissions",
+      "label": "按序解锁下一格槽位"
+    },
+    "44": { "type": "pager", "action": "page_next", "label": "下一页" },
+    "P0-P26": { "type": "storage", "label": "玩家主背包 (3×9 = 27格)" },
+    "P27-P35": { "type": "storage", "label": "玩家快捷栏 (1×9 = 9格)" }
+  },
+  "layers": ["background", "dynamic_text", "items"],
+  "notes": [
+    "槽位 38-42 底层为 hidden 占位槽，上层叠加跨 5 格绘制的 ProgressBar (标注为 background + dynamic_text 层)",
+    "未解锁槽位 (realIndex >= unlockedCount) 渲染为 locked 状态并显示锁图标",
+    "在分类或搜索状态下放入物品，自动写入真实仓库数组的首个空闲已解锁槽位"
+  ]
+}

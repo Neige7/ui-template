@@ -1,0 +1,33 @@
+{
+  "screen": "guild",
+  "rows": 5,
+  "title": "§8[§6荣耀公会圣殿§8]",
+  "clientMode": "mod_client_and_container_hybrid",
+  "slots": {
+    "0": { "type": "tab", "action": "guild_tab:overview", "label": "公会概览" },
+    "1": { "type": "tab", "action": "guild_tab:members", "label": "成员管理" },
+    "2": { "type": "tab", "action": "guild_tab:applications", "label": "申请审批" },
+    "3": { "type": "tab", "action": "guild_tab:donate", "label": "捐献与贡献" },
+    "4": { "type": "tab", "action": "guild_tab:warehouse", "label": "公会仓库 (复用仓库组件)" },
+    "5": { "type": "tab", "action": "guild_tab:logs", "label": "公会日志" },
+    "6": { "type": "tab", "action": "guild_tab:settings", "label": "公会设置" },
+    "7": { "type": "button", "action": "guild_cycle_role_or_mode", "label": "职位模拟切换 (会长/副会长/精英/成员)" },
+    "8": { "type": "button", "action": "nav_screen:inventory", "label": "返回角色行囊(Hub)" },
+    "9-35": {
+      "type": "storage",
+      "label": "子页面主内容区 (在公会仓库 Tab 下直接复用 ReusableWarehouseGrid 27 格存储区)"
+    },
+    "36": { "type": "pager", "action": "page_prev", "label": "上一页" },
+    "37": { "type": "pager", "action": "page_info", "label": "页码 (x/y)" },
+    "38-42": { "type": "progress_bar", "label": "公会经验条 / 公会仓库总量限制条" },
+    "43": {
+      "type": "button",
+      "action": "context_action_43",
+      "visibleWhen": "hasGuildPermission(role, action)",
+      "label": "按职位权限矩阵显示的上下文操作按钮"
+    },
+    "44": { "type": "pager", "action": "page_next", "label": "下一页 / 退出或解散公会" },
+    "P0-P35": { "type": "storage", "label": "玩家背包 (用于公会捐献或公会仓库存取)" }
+  },
+  "layers": ["background", "dynamic_text", "items"]
+}
