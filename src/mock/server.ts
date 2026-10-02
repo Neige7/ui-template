@@ -2349,6 +2349,119 @@ function handleShopEditInventoryClick(
 }
 
 /**
+ * 从玩家仓库取出上架商品，存入箱子商店库存。
+ */
+function depositFromPlayerWarehouse(
+  state: ServerState,
+  mode: 'stack' | 'all'
+): ServerHandleResult {
+  const shop = state.chestShop;
+  const warehouse = state.warehouse;
+  if (!shop.targetItem) {
+    return {
+      state: withToast(state, 'warning', '请先在下方背包中点击物品完成上架！'),
+      summary: '未上架商品无法从玩家仓库存入',
+    };
+  }
+
+  let totalDeposited = 0;
+  const limit = mode === 'all' ? Number.MAX_SAFE_INTEGER : 64;
+  for (let i = 0; i < warehouse.unlockedCount; i++) {
+    const item = warehouse.slots[i];
+    if (!item || !canStackItems(item, shop.targetItem)) continue;
+    const space = Math.max(0, shop.maxStock - shop.stock);
+    const canTake = Math.min(space, limit - totalDeposited, item.amount);
+    if (canTake <= 0) break;
+    shop.stock += canTake;
+    item.amount -= canTake;
+    totalDeposited += canTake;
+    if (item.amount <= 0) warehouse.slots[i] = null;
+    if (totalDeposited >= limit || shop.stock >= shop.maxStock) break;
+  }
+
+  warehouse.totalAmount = calculateWarehouseTotalAmount(warehouse.slots, 'stack_sum');
+  if (totalDeposited <= 0) {
+    return {
+      state: withToast(state, 'warning', `玩家仓库内未找到更多同类物品「${shop.targetItem.name}」可供存入`),
+      summary: '玩家仓库存入未找到同类物品',
+    };
+  }
+
+  return {
+    state: withToast(
+      state,
+      shop.stock >= shop.maxStock ? 'warning' : 'success',
+      `已从玩家仓库存入 ${totalDeposited} 件物品，现库存: ${shop.stock}/${shop.maxStock}${
+        shop.stock >= shop.maxStock ? '（已达商店数量限制）' : ''
+      }`
+    ),
+    summary: `从玩家仓库存入 ${totalDeposited} 件库存`,
+  };
+}
+
+/**
+ * 从箱子商店取出上架商品，存入玩家仓库。
+ */
+function withdrawToPlayerWarehouse(
+  state: ServerState,
+  mode: 'stack' | 'all'
+): ServerHandleResult {
+  const shop = state.chestShop;
+  const warehouse = state.warehouse;
+  if (!shop.targetItem || shop.stock <= 0) {
+    return {
+      state: withToast(state, 'warning', '当前商店库存为空，无物品可取出！'),
+      summary: '库存为空无法取至玩家仓库',
+    };
+  }
+
+  const requested = mode === 'all' ? shop.stock : Math.min(64, shop.stock);
+  const currentTotal = calculateWarehouseTotalAmount(warehouse.slots, 'stack_sum');
+  const availableCap = Math.max(0, warehouse.maxTotalAmount - currentTotal);
+  if (availableCap <= 0) {
+    return {
+      state: withToast(
+        state,
+        'warning',
+        `玩家仓库总数量已达上限 (${warehouse.maxTotalAmount})，无法继续取出！`
+      ),
+      summary: '玩家仓库超过总数量上限，拒绝取出',
+    };
+  }
+
+  const itemToMove: Item = {
+    ...shop.targetItem,
+    amount: Math.min(requested, availableCap),
+  };
+  const { nextSlots, remainingAmount } = insertItemIntoSlots(
+    warehouse.slots,
+    itemToMove,
+    warehouse.unlockedCount
+  );
+  const actuallyMoved = itemToMove.amount - remainingAmount;
+  if (actuallyMoved <= 0) {
+    return {
+      state: withToast(state, 'warning', '玩家仓库已解锁槽位不足，无法取出更多物品！'),
+      summary: '玩家仓库无可用解锁槽位',
+    };
+  }
+
+  warehouse.slots = nextSlots;
+  warehouse.totalAmount = calculateWarehouseTotalAmount(nextSlots, 'stack_sum');
+  shop.stock -= actuallyMoved;
+  return {
+    state: withToast(
+      state,
+      actuallyMoved < requested ? 'warning' : 'success',
+      `已将 ${actuallyMoved} 件商品取出至玩家仓库，商店剩余库存: ${shop.stock} 件${
+        actuallyMoved < requested ? '（仓库容量不足，剩余库存保留）' : ''
+      }`
+    ),
+    summary: `从商店取出 ${actuallyMoved} 件至玩家仓库`,
+  };
+}
+
+/**
  * 商店编辑界面 (shop_edit) 容器槽位动作处理
  */
 function handleShopEditAction(state: ServerState, action: GuiAction): ServerHandleResult {
@@ -2476,7 +2589,13 @@ function handleShopEditAction(state: ServerState, action: GuiAction): ServerHand
     };
   }
 
-  // 6. 从背包存入商品至商店 (+64 或 全部存入)
+  // 6. 从玩家仓库存入商品至商店 (+64 或 全部存入)
+  if (payloadAction === 'shop_deposit_from_warehouse') {
+    const mode = payload.mode === 'all' ? 'all' : 'stack';
+    return depositFromPlayerWarehouse(state, mode);
+  }
+
+  // 7. 从背包存入商品至商店 (+64 或 全部存入)
   if (payloadAction === 'shop_deposit_from_inv') {
     if (!shop.targetItem) {
       return {
@@ -2519,7 +2638,7 @@ function handleShopEditAction(state: ServerState, action: GuiAction): ServerHand
     };
   }
 
-  // 7. 从商店取出库存至玩家背包 (-64 或 全部取出)
+  // 8. 从商店取出库存至玩家背包 (-64 或 全部取出)
   if (payloadAction === 'shop_withdraw_to_inv') {
     if (!shop.targetItem || shop.stock <= 0) {
       return {
@@ -2552,7 +2671,13 @@ function handleShopEditAction(state: ServerState, action: GuiAction): ServerHand
     };
   }
 
-  // 8. 下架清空 (退回所有库存到玩家背包)
+  // 9. 从商店取出库存至玩家仓库 (-64 或 全部取出)
+  if (payloadAction === 'shop_withdraw_to_warehouse') {
+    const mode = payload.mode === 'all' ? 'all' : 'stack';
+    return withdrawToPlayerWarehouse(state, mode);
+  }
+
+  // 10. 下架清空 (退回所有库存到玩家背包)
   if (payloadAction === 'shop_unlist') {
     if (!shop.targetItem) {
       return {
@@ -2585,8 +2710,8 @@ function handleShopEditAction(state: ServerState, action: GuiAction): ServerHand
     };
   }
 
-  // 9. 核心展示槽位交互
-  if (action.slot === 13 || action.slot === 22) {
+  // 11. 核心展示槽位交互
+  if (action.slot === 13) {
     if (action.click === 'right' && shop.targetItem) {
       return handleShopEditAction(state, {
         ...action,

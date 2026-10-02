@@ -30,10 +30,11 @@ export const SCREEN_READMES: Record<ScreenId, { title: string; bullets: string[]
       '超大库存管理：摆脱原版 64 堆叠上限，支持按最大容量（如 5000 件）存储 300 件或更多商品。',
       '结算货币自由切换：支持金币 (Vault)、点券 (PlayerPoints)、绿宝石三种结算经济体系。',
       '单价直接输入与微调：支持 +-1、+-10、+-100 增减，以及铁砧直接自定义键盘输入单价值。',
+      '库存转移：槽位 28~31 操作玩家背包，槽位 32~35 操作玩家仓库；全部存入无法超过商店数量限制。',
     ],
     mcPortingNotes: [
       'Bukkit/Paper 映射：rawSlot 13 映射为 Shop Item 模板，rawSlot 54..89 捕获背包点击执行首次上架或同类补货。',
-      '超大库存存储采用数据库或 NBT 存储总整型数值，客户端使用 custom Lore 与物品数量覆盖渲染。',
+      '超大库存存储采用数据库或 NBT 存储总整型数值，客户端使用 custom Lore 与物品数量覆盖渲染；仓库存取需同步校验解锁槽位与总量上限。',
     ],
   },
   shop_buy: {

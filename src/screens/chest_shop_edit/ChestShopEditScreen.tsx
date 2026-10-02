@@ -212,30 +212,31 @@ export const ChestShopEditScreen: React.FC = () => {
 
       {renderBorderSlot(7)}
 
-      {/* 槽位 8: 返回角色行囊 */}
-      <Slot
-        slot={8}
-        screen="shop_edit"
-        item={{
-          id: 'btn_back_hub',
-          name: '§e返回角色行囊 (Hub)',
-          icon: 'chest_plate',
-          rarity: 'rare',
-          category: 'other',
-          amount: 1,
-          maxStack: 1,
-          lore: [],
-        }}
-        customTooltip={{
-          title: '§e⬅ 返回角色行囊',
-          lore: ['§7关闭商店管理面板，回到个人背包与导航中心', '§a▶ 左键点击返回'],
-        }}
-        payload={{ action: 'nav_screen:inventory' }}
-      />
+      {renderBorderSlot(8)}
 
       {/* ================= 行 1 (槽位 9~17): 单价微调与核心展示槽位 ================= */}
       {renderBorderSlot(9)}
-      {renderBorderSlot(10)}
+
+      {/* 槽位 10: -100 单价 */}
+      <Slot
+        slot={10}
+        screen="shop_edit"
+        item={{
+          id: 'price_m100',
+          name: '§c-100 单价',
+          icon: 'minus_qty',
+          rarity: 'uncommon',
+          category: 'other',
+          amount: 1,
+          maxStack: 64,
+          lore: [],
+        }}
+        customTooltip={{
+          title: '§c-100 单件售价',
+          lore: [`§7当前单价: §e${shop.unitPrice}`, '§e▶ 左键点击单价 -100'],
+        }}
+        payload={{ action: 'shop_adjust_price', delta: -100 }}
+      />
 
       {/* 槽位 11: -10 单价 */}
       <Slot
@@ -373,20 +374,14 @@ export const ChestShopEditScreen: React.FC = () => {
         payload={{ action: 'shop_adjust_price', delta: 10 }}
       />
 
-      {renderBorderSlot(16)}
-      {renderBorderSlot(17)}
-
-      {/* ================= 行 2 (槽位 18~26): 单价精调与直接输入 ================= */}
-      {renderBorderSlot(18)}
-
-      {/* 槽位 19: -100 单价 */}
+      {/* 槽位 16: +100 单价 */}
       <Slot
-        slot={19}
+        slot={16}
         screen="shop_edit"
         item={{
-          id: 'price_m100',
-          name: '§c-100 单价',
-          icon: 'minus_qty',
+          id: 'price_p100',
+          name: '§a+100 单价',
+          icon: 'plus_qty',
           rarity: 'uncommon',
           category: 'other',
           amount: 1,
@@ -394,11 +389,18 @@ export const ChestShopEditScreen: React.FC = () => {
           lore: [],
         }}
         customTooltip={{
-          title: '§c-100 单件售价',
-          lore: [`§7当前单价: §e${shop.unitPrice}`, '§e▶ 左键点击单价 -100'],
+          title: '§a+100 单件售价',
+          lore: [`§7当前单价: §e${shop.unitPrice}`, '§e▶ 左键点击单价 +100'],
         }}
-        payload={{ action: 'shop_adjust_price', delta: -100 }}
+        payload={{ action: 'shop_adjust_price', delta: 100 }}
       />
+
+      {renderBorderSlot(17)}
+
+      {/* ================= 行 2 (槽位 18~26): 单价输入与库存容量 ================= */}
+      {renderBorderSlot(18)}
+
+      {renderBorderSlot(19)}
 
       {renderBorderSlot(20)}
 
@@ -429,33 +431,7 @@ export const ChestShopEditScreen: React.FC = () => {
         payload={{ action: 'shop_price_input' }}
       />
 
-      {/* 槽位 22: 直接输入自定义库存 */}
-      <Slot
-        slot={22}
-        screen="shop_edit"
-        item={{
-          id: 'btn_stock_input',
-          name: `§b§l当前库存: §f${shop.stock} §7/ §3${shop.maxStock}`,
-          icon: 'chest_gold',
-          rarity: 'epic',
-          category: 'other',
-          amount: Math.min(64, Math.max(1, shop.stock % 65)),
-          maxStack: 64,
-          lore: [],
-        }}
-        badgeText="库存"
-        badgeColor="#55ffff"
-        customTooltip={{
-          title: '§b📦 自定义超大库存设定 (铁砧)',
-          lore: [
-            `§7当前库存数量: §b${shop.stock} 件`,
-            `§7库存存储上限: §3${shop.maxStock} 件`,
-            '§f--------------------------------',
-            '§a▶ 点击直接输入超大数量 (如 300 件)',
-          ],
-        }}
-        payload={{ action: 'shop_stock_input' }}
-      />
+      {renderBorderSlot(22)}
 
       {/* 槽位 23: 库存容量上限 */}
       <Slot
@@ -482,30 +458,11 @@ export const ChestShopEditScreen: React.FC = () => {
 
       {renderBorderSlot(24)}
 
-      {/* 槽位 25: +100 单价 */}
-      <Slot
-        slot={25}
-        screen="shop_edit"
-        item={{
-          id: 'price_p100',
-          name: '§a+100 单价',
-          icon: 'plus_qty',
-          rarity: 'uncommon',
-          category: 'other',
-          amount: 1,
-          maxStack: 64,
-          lore: [],
-        }}
-        customTooltip={{
-          title: '§a+100 单件售价',
-          lore: [`§7当前单价: §e${shop.unitPrice}`, '§e▶ 左键点击单价 +100'],
-        }}
-        payload={{ action: 'shop_adjust_price', delta: 100 }}
-      />
+      {renderBorderSlot(25)}
 
       {renderBorderSlot(26)}
 
-      {/* ================= 行 3 (槽位 27~35): 超大库存存入/取出/下架 ================= */}
+      {/* ================= 行 3 (槽位 27~35): 背包/仓库存入与取出 ================= */}
       {renderBorderSlot(27)}
 
       {/* 槽位 28: 从背包存入 64 件 */}
@@ -552,13 +509,14 @@ export const ChestShopEditScreen: React.FC = () => {
           title: '§a⚡ 背包同类全部存入',
           lore: [
             '§7一键将背包内所有该商品存入商店库存。',
+            '§c⚠ 存入数量无法超过商店库存上限，超出部分保留在背包。',
             '§e▶ 左键点击一键全部存入',
           ],
         }}
         payload={{ action: 'shop_deposit_from_inv', mode: 'all' }}
       />
 
-      {/* 槽位 30: 从商店取出 64 件 */}
+      {/* 槽位 30: 从商店取出 64 件至背包 */}
       <Slot
         slot={30}
         screen="shop_edit"
@@ -608,17 +566,41 @@ export const ChestShopEditScreen: React.FC = () => {
         payload={{ action: 'shop_withdraw_to_inv', mode: 'all' }}
       />
 
-      {/* 槽位 32: 一键设为 300 件 (超大库存演示) */}
+      {/* 槽位 32: 从仓库存入 64 件 */}
       <Slot
         slot={32}
         screen="shop_edit"
         state={targetItem ? 'normal' : 'disabled'}
-        badgeText="300"
-        badgeColor="#d066ff"
         item={{
-          id: 'btn_quick_300',
-          name: '§d§l一键设为 300 件 (演示)',
-          icon: 'ore_mythril',
+          id: 'btn_dep_warehouse_64',
+          name: '§a从仓库存入 +64',
+          icon: 'arrow_right',
+          rarity: 'rare',
+          category: 'other',
+          amount: 64,
+          maxStack: 64,
+          lore: [],
+        }}
+        customTooltip={{
+          title: '§a➕ 从玩家仓库存入 64 件同类物品',
+          lore: [
+            '§7在玩家仓库中寻找同类商品并转移 64 件至商店。',
+            '§c⚠ 存入数量无法超过商店库存上限，超出部分保留在仓库。',
+            '§e▶ 左键点击执行存入',
+          ],
+        }}
+        payload={{ action: 'shop_deposit_from_warehouse', mode: 'stack' }}
+      />
+
+      {/* 槽位 33: 仓库同类全部存入 */}
+      <Slot
+        slot={33}
+        screen="shop_edit"
+        state={targetItem ? 'normal' : 'disabled'}
+        item={{
+          id: 'btn_dep_warehouse_all',
+          name: '§a仓库同类全部存入',
+          icon: 'arrow_right',
           rarity: 'epic',
           category: 'other',
           amount: 1,
@@ -626,45 +608,66 @@ export const ChestShopEditScreen: React.FC = () => {
           lore: [],
         }}
         customTooltip={{
-          title: '§d⚡ 快速填充超大库存: 300 件',
+          title: '§a⚡ 仓库同类全部存入',
           lore: [
-            '§7专为本次需求演示提供：',
-            '§7快速将商店库存直接设为 §d300 件§7，验证超大存储与买家端上限校验！',
-            '§a▶ 左键点击填充为 300 件',
+            '§7一键将玩家仓库内所有该商品存入商店库存。',
+            '§c⚠ 存入数量无法超过商店库存上限，超出部分保留在仓库。',
+            '§e▶ 左键点击一键全部存入',
           ],
         }}
-        payload={{ action: 'shop_set_stock_quick', amount: 300 }}
+        payload={{ action: 'shop_deposit_from_warehouse', mode: 'all' }}
       />
 
-      {renderBorderSlot(33)}
-
-      {/* 槽位 34: 下架商品并退还库存 */}
+      {/* 槽位 34: 从商店取出 64 件至仓库 */}
       <Slot
         slot={34}
         screen="shop_edit"
-        state={targetItem ? 'normal' : 'disabled'}
+        state={targetItem && shop.stock > 0 ? 'normal' : 'disabled'}
         item={{
-          id: 'btn_unlist',
-          name: '§c§l[ 下架商品 ]',
-          icon: 'cross_red',
-          rarity: 'mythic',
+          id: 'btn_wdr_warehouse_64',
+          name: '§b从商店取出 -64 至仓库',
+          icon: 'arrow_left',
+          rarity: 'rare',
+          category: 'other',
+          amount: 64,
+          maxStack: 64,
+          lore: [],
+        }}
+        customTooltip={{
+          title: '§b➖ 从商店取出 64 件至玩家仓库',
+          lore: [
+            '§7将商店库存中的 64 件商品取出并存入玩家仓库。',
+            '§e▶ 左键点击取出',
+          ],
+        }}
+        payload={{ action: 'shop_withdraw_to_warehouse', mode: 'stack' }}
+      />
+
+      {/* 槽位 35: 全部取出至仓库 */}
+      <Slot
+        slot={35}
+        screen="shop_edit"
+        state={targetItem && shop.stock > 0 ? 'normal' : 'disabled'}
+        item={{
+          id: 'btn_wdr_warehouse_all',
+          name: '§b全部取出至仓库',
+          icon: 'arrow_left',
+          rarity: 'epic',
           category: 'other',
           amount: 1,
           maxStack: 1,
           lore: [],
         }}
         customTooltip={{
-          title: '§c❌ 下架当前商品',
+          title: '§b📦 全部取出至玩家仓库',
           lore: [
-            '§7下架商品并将所有库存退回至玩家背包。',
-            '§7商店将恢复为初始待上架状态。',
-            '§c▶ 左键点击确认下架',
+            '§7尽可能将商店全部库存取出并存入玩家仓库。',
+            '§7仓库总量上限或已解锁槽位不足时会保留剩余库存。',
+            '§e▶ 左键点击批量取出',
           ],
         }}
-        payload={{ action: 'shop_unlist' }}
+        payload={{ action: 'shop_withdraw_to_warehouse', mode: 'all' }}
       />
-
-      {renderBorderSlot(35)}
 
       {/* ================= 行 4 & 5 (槽位 36~53): 操作提示与底栏装饰 ================= */}
       {Array.from({ length: 18 }, (_, idx) => {
@@ -697,6 +700,66 @@ export const ChestShopEditScreen: React.FC = () => {
                   '§f4. 切换到买家视角可体验数量调整与背包容量防御。',
                 ],
               }}
+            />
+          );
+        }
+        if (slotNum === 41) {
+          return (
+            <Slot
+              key={slotNum}
+              slot={slotNum}
+              screen="shop_edit"
+              state={targetItem ? 'normal' : 'disabled'}
+              badgeText="300"
+              badgeColor="#d066ff"
+              item={{
+                id: 'btn_quick_300',
+                name: '§d§l一键设为 300 件 (演示)',
+                icon: 'ore_mythril',
+                rarity: 'epic',
+                category: 'other',
+                amount: 1,
+                maxStack: 1,
+                lore: [],
+              }}
+              customTooltip={{
+                title: '§d⚡ 快速填充超大库存: 300 件',
+                lore: [
+                  '§7专为本次需求演示提供：',
+                  '§7快速将商店库存直接设为 §d300 件§7，验证超大存储与买家端上限校验！',
+                  '§a▶ 左键点击填充为 300 件',
+                ],
+              }}
+              payload={{ action: 'shop_set_stock_quick', amount: 300 }}
+            />
+          );
+        }
+        if (slotNum === 42) {
+          return (
+            <Slot
+              key={slotNum}
+              slot={slotNum}
+              screen="shop_edit"
+              state={targetItem ? 'normal' : 'disabled'}
+              item={{
+                id: 'btn_unlist',
+                name: '§c§l[ 下架商品 ]',
+                icon: 'cross_red',
+                rarity: 'mythic',
+                category: 'other',
+                amount: 1,
+                maxStack: 1,
+                lore: [],
+              }}
+              customTooltip={{
+                title: '§c❌ 下架当前商品',
+                lore: [
+                  '§7下架商品并将所有库存退回至玩家背包。',
+                  '§7商店将恢复为初始待上架状态。',
+                  '§c▶ 左键点击确认下架',
+                ],
+              }}
+              payload={{ action: 'shop_unlist' }}
             />
           );
         }
