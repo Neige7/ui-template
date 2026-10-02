@@ -31,6 +31,9 @@ export const ConfirmDialog: React.FC = () => {
           <span className="mc-debug-layer-tag">ConfirmSubGUI (3×9)</span>
         </div>
 
+        {/* 标题栏下金色分隔线 (与主容器一致) */}
+        <div className="mc-gui-header-rule" aria-hidden="true" />
+
         <div
           className="mc-slot-grid"
           style={{ height: 'calc(3 * var(--slot-size))' }}

@@ -64,7 +64,7 @@ export const Gallery: React.FC = () => {
     createBaseServerState('warehouse')
   );
   const [guiScale, setGuiScale] = useState<2 | 3 | 4>(3);
-  const [debugMode, setDebugMode] = useState<boolean>(true);
+  const [debugMode, setDebugMode] = useState<boolean>(false);
   const [tooltip, setTooltip] = useState<TooltipPayload | null>(null);
   const [actionLogs, setActionLogs] = useState<ActionLogEntry[]>([
     {
@@ -188,16 +188,7 @@ export const Gallery: React.FC = () => {
 
           {/* 9 个界面切换器 */}
           <div>
-            <div
-              style={{
-                fontSize: '11px',
-                color: '#9aa2c2',
-                marginBottom: '6px',
-                fontFamily: 'var(--font-mono)',
-                display: 'flex',
-                justifyContent: 'space-between',
-              }}
-            >
+            <div className="wb-section-title">
               <span>9 大服务器 GUI 界面</span>
               <span>点击切换</span>
             </div>
@@ -267,15 +258,8 @@ export const Gallery: React.FC = () => {
 
           {/* 预设 Mock 场景切换器 (正常 / 空数据 / 多页满载 / 边界情况) */}
           <div>
-            <div
-              style={{
-                fontSize: '11px',
-                color: '#9aa2c2',
-                marginBottom: '6px',
-                fontFamily: 'var(--font-mono)',
-              }}
-            >
-              预设测试场景 (Mock Scenarios)
+            <div className="wb-section-title">
+              <span>预设测试场景 (Mock Scenarios)</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               {SCENARIO_LIST.map((sc) => {
@@ -323,16 +307,7 @@ export const Gallery: React.FC = () => {
           </div>
 
           {/* 全局缩放系数 --gui-scale 与 DebugOverlay 开关 */}
-          <div
-            style={{
-              background: '#181c2b',
-              border: '1px solid #2e3552',
-              padding: '10px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px',
-            }}
-          >
+          <div className="wb-control-box">
             <div
               style={{
                 display: 'flex',
@@ -429,16 +404,7 @@ export const Gallery: React.FC = () => {
         {/* ==================== 中央：可交互 Minecraft 容器 GUI 舞台 ==================== */}
         <main className="workbench-stage">
           {/* 快捷游戏组件切片导出操作条 */}
-          <div
-            style={{
-              width: 'var(--gui-width)',
-              marginBottom: '6px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              gap: '6px',
-            }}
-          >
+          <div className="stage-toolbar">
             <button
               type="button"
               className="wb-btn active"
@@ -495,19 +461,10 @@ export const Gallery: React.FC = () => {
             </button>
           </div>
 
-          {/* 顶部操作提示与实时 Toast 通知栏 */}
+          {/* 顶部操作提示与实时 Toast 通知栏 (data-tone 驱动状态色) */}
           <div
-            style={{
-              width: 'var(--gui-width)',
-              marginBottom: '8px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '6px 10px',
-              background: '#161926',
-              border: '1px solid #323956',
-              fontSize: '12px',
-            }}
+            className="stage-toast"
+            data-tone={serverState.ui.lastToast?.type || 'hint'}
           >
             <div>
               {serverState.ui.lastToast ? (

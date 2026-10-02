@@ -170,20 +170,8 @@ export const QuickExportDrawer: React.FC<QuickExportDrawerProps> = ({
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
-                {/* 缩略图 */}
-                <div
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    backgroundColor: '#0a0b12',
-                    border: '1px solid #1c2030',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    overflow: 'hidden',
-                  }}
-                >
+                {/* 缩略图 (棋盘格透底) */}
+                <div className="asset-thumb">
                   <img
                     src={asset.render(1, true).toDataURL()}
                     alt={asset.name}

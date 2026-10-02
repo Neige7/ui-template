@@ -51,6 +51,9 @@ export const GuiFrame: React.FC<GuiFrameProps> = ({
         )}
       </div>
 
+      {/* 标题栏下金色分隔线与中央菱形 (background 装饰层) */}
+      <div className="mc-gui-header-rule" aria-hidden="true" />
+
       {/* 容器区 9列 × rows行 槽位网格 */}
       <div
         className="mc-slot-grid"
@@ -64,18 +67,7 @@ export const GuiFrame: React.FC<GuiFrameProps> = ({
 
       {/* 可选动态信息横幅 (标注为 dynamic_text / mod overlay 层) */}
       {footerBanner && (
-        <div
-          style={{
-            width: 'var(--grid-width)',
-            margin: 'calc(2px * var(--gui-scale)) auto 0',
-            padding: 'calc(2px * var(--gui-scale)) calc(3px * var(--gui-scale))',
-            background: '#171924',
-            border: 'var(--px) solid #373d59',
-            fontSize: 'calc(4.4px * var(--gui-scale))',
-            lineHeight: 1.35,
-            position: 'relative',
-          }}
-        >
+        <div className="mc-gui-footer-banner">
           {debugMode && (
             <span
               style={{

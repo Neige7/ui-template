@@ -50,40 +50,17 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
         height: 'var(--slot-size)',
       }}
     >
-      <div
-        style={{
-          width: '100%',
-          height: 'calc(11px * var(--gui-scale))',
-          background: 'rgba(12, 14, 22, 0.92)',
-          border: 'var(--px) solid #4f5678',
-          position: 'relative',
-          overflow: 'hidden',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
+      <div className="mc-progress-track">
         <div
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: `${pct}%`,
-            background: fillColor,
-            opacity: 0.75,
-            transition: 'width 0.2s ease, background 0.2s ease',
-          }}
+          className="mc-progress-fill"
+          style={
+            {
+              width: `${pct}%`,
+              '--fill': fillColor,
+            } as React.CSSProperties
+          }
         />
-        <span
-          style={{
-            position: 'relative',
-            zIndex: 2,
-            fontSize: 'calc(4.3px * var(--gui-scale))',
-            textShadow: 'var(--px) var(--px) 0 #090a10',
-            whiteSpace: 'nowrap',
-          }}
-        >
+        <span className="mc-progress-label">
           <MinecraftText text={label} />
         </span>
       </div>

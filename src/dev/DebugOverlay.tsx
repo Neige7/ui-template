@@ -17,22 +17,7 @@ export const DebugOverlayBanner: React.FC<DebugOverlayBannerProps> = ({
   if (!debugMode) return null;
 
   return (
-    <div
-      style={{
-        width: 'var(--gui-width)',
-        marginBottom: '8px',
-        padding: '6px 10px',
-        background: 'rgba(0, 32, 36, 0.9)',
-        border: '1px solid #00ffcc',
-        fontFamily: 'var(--font-mono)',
-        fontSize: '11px',
-        color: '#b8fff0',
-        display: 'flex',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-        gap: '6px',
-      }}
-    >
+    <div className="mc-debug-banner">
       <div>
         <strong style={{ color: '#00ffcc' }}>[DEBUG GRID ON]</strong> Screen:{' '}
         <code>{screen}</code> | 容器宽度: <code>176px×{guiScale}={176 * guiScale}px</code>

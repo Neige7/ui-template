@@ -200,7 +200,7 @@ export const Slot: React.FC<SlotProps> = ({
       )}
 
       {state !== 'locked' && state !== 'hidden' && !item && placeholderIcon && (
-        <div style={{ opacity: 0.35 }}>
+        <div className="mc-slot-placeholder">
           <ItemIcon icon={placeholderIcon} rarity="common" />
         </div>
       )}

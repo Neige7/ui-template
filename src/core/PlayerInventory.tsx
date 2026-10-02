@@ -28,9 +28,13 @@ export const PlayerInventory: React.FC<PlayerInventoryProps> = ({
         <span>
           <MinecraftText text="§7玩家行囊 §8(P0~P35 · 3×9 + 1×9)" />
         </span>
-        <span style={{ display: 'flex', gap: 'calc(4px * var(--gui-scale))' }}>
-          <MinecraftText text={`§6🪙 ${gold.toLocaleString()}`} />
-          <MinecraftText text={`§b💎 ${gems.toLocaleString()}`} />
+        <span style={{ display: 'flex', gap: 'calc(2px * var(--gui-scale))' }}>
+          <span className="mc-currency-chip chip-gold">
+            <MinecraftText text={`§6🪙 ${gold.toLocaleString()}`} />
+          </span>
+          <span className="mc-currency-chip chip-gems">
+            <MinecraftText text={`§b💎 ${gems.toLocaleString()}`} />
+          </span>
         </span>
       </div>
 
